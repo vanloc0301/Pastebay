@@ -25,12 +25,10 @@ struct CardStyle: ViewModifier {
                         .settingsGlassEffect(cornerRadius: 12)
                 }
         } else {
-            // Use drawingGroup() to flatten the view hierarchy and reduce compositing
             content
                 .padding()
                 .background(Color(NSColor.controlBackgroundColor))
                 .cornerRadius(8)
-                .drawingGroup(opaque: false)
         }
     }
 }
@@ -127,27 +125,61 @@ extension View {
     }
 }
 
-// MARK: - Settings Glass Effect (disabled - using simple materials instead)
+// MARK: - Settings Glass Effect
 
 extension View {
-    /// Glass effect disabled - returns self unchanged
+    /// Applies the native macOS 26 glass effect when the Settings visual budget allows it.
+    @ViewBuilder
     func settingsGlassEffect(cornerRadius: CGFloat) -> some View {
-        self
+        if #available(macOS 26.0, *),
+           SettingsVisualEffects.enableGlassEffects {
+            self.glassEffect(
+                .regular,
+                in: .rect(corners: .fixed(cornerRadius), isUniform: true)
+            )
+        } else {
+            self
+        }
     }
 
-    /// Glass effect disabled - returns self unchanged
+    /// Applies the native macOS 26 glass effect in an explicit shape.
+    @ViewBuilder
     func settingsGlassEffect<S: Shape>(in shape: S) -> some View {
-        self
+        if #available(macOS 26.0, *),
+           SettingsVisualEffects.enableGlassEffects {
+            self.glassEffect(.regular, in: shape)
+        } else {
+            self
+        }
     }
 
-    /// Interactive glass effect disabled - returns self unchanged
+    /// Applies interactive native glass for custom controls when available.
+    @ViewBuilder
     func settingsInteractiveGlassEffect(cornerRadius: CGFloat) -> some View {
-        self
+        if #available(macOS 26.0, *),
+           SettingsVisualEffects.enableGlassEffects {
+            self.glassEffect(
+                .regular.interactive(),
+                in: .rect(corners: .fixed(cornerRadius), isUniform: true)
+            )
+        } else {
+            self
+        }
     }
 
-    /// Tinted glass effect disabled - returns self unchanged
+    /// Applies native glass plus a semantic tint for status/accent surfaces.
+    @ViewBuilder
     func settingsTintedGlassEffect(cornerRadius: CGFloat, tint: Color) -> some View {
-        self
+        if #available(macOS 26.0, *),
+           SettingsVisualEffects.enableGlassEffects {
+            self.glassEffect(
+                .regular,
+                in: .rect(corners: .fixed(cornerRadius), isUniform: true)
+            )
+            .tint(tint)
+        } else {
+            self
+        }
     }
 }
 
@@ -675,7 +707,7 @@ struct LiquidGlassTabIndicator: View {
 
 // MARK: - Floating Glass Card (macOS 26+)
 
-/// A floating card container with Liquid Glass effect
+/// A floating card container that uses native glass on macOS 26 when enabled.
 struct FloatingGlassCard<Content: View>: View {
     let cornerRadius: CGFloat
     let content: Content
@@ -694,8 +726,13 @@ struct FloatingGlassCard<Content: View>: View {
     var body: some View {
         content
             .background {
-                // Simple material background - no glass effect
-                if SettingsVisualEffects.enableMaterials, !reduceTransparency {
+                if #available(macOS 26.0, *),
+                   SettingsVisualEffects.enableGlassEffects,
+                   !reduceTransparency {
+                    PHTVRoundedRect(cornerRadius: cornerRadius)
+                        .fill(Color(NSColor.windowBackgroundColor).opacity(colorScheme == .dark ? 0.2 : 0.25))
+                        .settingsGlassEffect(cornerRadius: cornerRadius)
+                } else if SettingsVisualEffects.enableMaterials, !reduceTransparency {
                     PHTVRoundedRect(cornerRadius: cornerRadius)
                         .fill(.regularMaterial)
                 } else {

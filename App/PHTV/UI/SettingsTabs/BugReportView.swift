@@ -7,15 +7,9 @@
 //
 
 import SwiftUI
-import OSLog
 import Carbon
 import Darwin.Mach
-import UniformTypeIdentifiers
 import Observation
-
-// MARK: - Logger for PHTV
-private let phtvLogger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.phamhungtien.phtv", category: "general")
-private let phtvMarkdownContentType = UTType(filenameExtension: "md") ?? .plainText
 
 private enum BugSeverity: String, CaseIterable, Identifiable {
     case low = "low"
@@ -702,89 +696,7 @@ struct BugReportView: View {
     }
 
     private func getRecentCrashLogs() -> String {
-        guard appState.includeCrashLogs else { return "" }
-        let crashLogsPath = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Logs/DiagnosticReports")
-
-        guard let files = try? FileManager.default.contentsOfDirectory(
-            at: crashLogsPath,
-            includingPropertiesForKeys: [.creationDateKey],
-            options: .skipsHiddenFiles
-        ) else {
-            return ""
-        }
-
-        // Filter PHTV crash logs from last 7 days
-        let sevenDaysAgo = Date().addingTimeInterval(-7 * 24 * 60 * 60)
-        let phtvCrashes = files.filter { file in
-            guard file.lastPathComponent.contains("PHTV") || file.lastPathComponent.contains("phtv") else {
-                return false
-            }
-
-            if let creationDate = try? file.resourceValues(forKeys: [.creationDateKey]).creationDate {
-                return creationDate > sevenDaysAgo
-            }
-            return false
-        }.sorted { file1, file2 in
-            let date1 = (try? file1.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? Date.distantPast
-            let date2 = (try? file2.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? Date.distantPast
-            return date1 > date2
-        }
-
-        guard !phtvCrashes.isEmpty else {
-            return ""
-        }
-
-        var crashReport = "📍 Tìm thấy \(phtvCrashes.count) crash log(s) gần đây:\n\n"
-
-        // Get first crash log content
-        if let firstCrash = phtvCrashes.first,
-           let content = try? String(contentsOf: firstCrash, encoding: .utf8) {
-            crashReport += "**File:** \(firstCrash.lastPathComponent)\n\n"
-
-            // Extract important parts
-            let lines = content.components(separatedBy: .newlines)
-
-            // Get crash reason
-            if let crashReasonLine = lines.first(where: { $0.contains("Exception Type:") || $0.contains("Termination Reason:") }) {
-                crashReport += "\(crashReasonLine)\n"
-            }
-
-            // Get thread that crashed
-            var inCrashedThread = false
-            var threadLines: [String] = []
-            for line in lines {
-                if line.contains("Thread") && line.contains("Crashed") {
-                    inCrashedThread = true
-                    threadLines.append(line)
-                    continue
-                }
-
-                if inCrashedThread {
-                    if line.starts(with: "Thread ") || line.isEmpty {
-                        break
-                    }
-                    threadLines.append(line)
-                    if threadLines.count > 15 { break }  // Limit to 15 lines
-                }
-            }
-
-            if !threadLines.isEmpty {
-                crashReport += "\n```\n"
-                crashReport += threadLines.joined(separator: "\n")
-                crashReport += "\n```\n"
-            }
-        }
-
-        // List other crash files
-        if phtvCrashes.count > 1 {
-            crashReport += "\n**Các crash khác:**\n"
-            for crash in phtvCrashes.dropFirst().prefix(3) {
-                crashReport += "- \(crash.lastPathComponent)\n"
-            }
-        }
-
-        return crashReport
+        BugReportCrashLogCollector.recentCrashLogs(includeCrashLogs: appState.includeCrashLogs)
     }
 
     private func loadDebugLogs() {
@@ -792,7 +704,7 @@ struct BugReportView: View {
         isLoadingLogs = true
 
         Task(priority: .userInitiated) {
-            let logs = await Self.fetchLogsInBackground(maxEntries: 80)
+            let logs = await BugReportLogCollector.fetchLogsInBackground(maxEntries: 80)
             applyLoadedLogs(logs)
         }
     }
@@ -801,7 +713,7 @@ struct BugReportView: View {
         guard !isLoadingLogs else { return }
         isLoadingLogs = true
 
-        let logs = await Self.fetchLogsInBackground(maxEntries: 80)
+        let logs = await BugReportLogCollector.fetchLogsInBackground(maxEntries: 80)
 
         logBuffer = logs
         isLoadingLogs = false
@@ -817,343 +729,6 @@ struct BugReportView: View {
     private func refreshLogs() async {
         logBuffer = ""
         await loadDebugLogsAsync()
-    }
-
-    // MARK: - Log Entry Model
-    private struct LogEntry {
-        let date: Date
-        let level: OSLogEntryLog.Level
-        let category: String
-        let message: String
-
-        var levelString: String {
-            switch level {
-            case .debug: return "DEBUG"
-            case .info: return "INFO"
-            case .notice: return "NOTICE"
-            case .error: return "ERROR"
-            case .fault: return "FAULT"
-            default: return "LOG"
-            }
-        }
-
-        var levelEmoji: String {
-            switch level {
-            case .error, .fault: return "🔴"
-            case .notice: return "🟡"
-            case .info: return "🔵"
-            case .debug: return "⚪"
-            default: return "⚫"
-            }
-        }
-
-        var isImportant: Bool {
-            level == .error || level == .fault || level == .notice
-        }
-    }
-
-    // MARK: - Log Statistics
-    private struct LogStats {
-        var totalCount: Int = 0
-        var errorCount: Int = 0
-        var warningCount: Int = 0
-        var infoCount: Int = 0
-        var debugCount: Int = 0
-        var firstLogTime: Date?
-        var lastLogTime: Date?
-        var lastError: String?
-        var lastErrorTime: Date?
-        var categoryCounts: [String: Int] = [:]
-
-        var duration: String {
-            guard let first = firstLogTime, let last = lastLogTime else { return "N/A" }
-            let interval = last.timeIntervalSince(first)
-            if interval < 60 {
-                return "\(Int(interval)) giây"
-            } else if interval < 3600 {
-                return "\(Int(interval / 60)) phút"
-            } else {
-                return String(format: "%.1f giờ", interval / 3600)
-            }
-        }
-    }
-
-    nonisolated private static func fetchLogsSync(maxEntries: Int = 100) -> String {
-        var allLogEntries: [LogEntry] = []
-        var stats = LogStats()
-
-        // 1. Lấy log từ OSLogStore (unified logging)
-        do {
-            let store = try OSLogStore(scope: .currentProcessIdentifier)
-            // Lấy log trong 15 phút gần đây để giảm RAM khi mở tab
-            let position = store.position(date: Date().addingTimeInterval(-15 * 60))
-            let entries = try store.getEntries(at: position)
-
-            var regularLogCount = 0
-            let maxRegularLogs = maxEntries
-            let maxTotalLogs = maxEntries * 2
-
-            for entry in entries {
-                if let logEntry = entry as? OSLogEntryLog {
-                    var message = logEntry.composedMessage
-                    guard !message.isEmpty else { continue }
-
-                    let isErrorOrWarning = logEntry.level == .error || logEntry.level == .fault || logEntry.level == .notice
-
-                    // Lọc bỏ log hệ thống không liên quan
-                    if shouldFilterOut(message: message, subsystem: logEntry.subsystem, level: logEntry.level) {
-                        continue
-                    }
-
-                    // LUÔN giữ lại tất cả errors và warnings - không bao giờ bỏ sót
-                    // Chỉ giới hạn số lượng log thường
-                    if !isErrorOrWarning {
-                        if regularLogCount >= maxRegularLogs {
-                            continue // Bỏ qua log thường nếu đã đủ, nhưng vẫn tiếp tục tìm errors/warnings
-                        }
-                        regularLogCount += 1
-                    }
-
-                    if message.count > 400 {
-                        message = String(message.prefix(400)) + "..."
-                    }
-
-                    let category = detectCategory(from: message)
-                    let logEntryItem = LogEntry(
-                        date: logEntry.date,
-                        level: logEntry.level,
-                        category: category,
-                        message: message
-                    )
-                    allLogEntries.append(logEntryItem)
-
-                    if allLogEntries.count >= maxTotalLogs {
-                        break
-                    }
-                }
-            }
-        } catch {
-            // Ignore OSLogStore errors, fallback to file logs
-        }
-
-        // 2. Lấy log từ file (nếu PHTVLogger được sử dụng)
-        // Note: Thêm PHTVLogger.swift vào project để bật tính năng này
-        // let fileLogs = PHTVLogger.shared.getFileLogs()
-        // if !fileLogs.isEmpty { ... }
-
-        // Sắp xếp theo thời gian
-        allLogEntries.sort { $0.date < $1.date }
-
-        // Tính thống kê
-        for entry in allLogEntries {
-            stats.totalCount += 1
-            stats.categoryCounts[entry.category, default: 0] += 1
-
-            if stats.firstLogTime == nil { stats.firstLogTime = entry.date }
-            stats.lastLogTime = entry.date
-
-            switch entry.level {
-            case .error, .fault:
-                stats.errorCount += 1
-                stats.lastError = entry.message
-                stats.lastErrorTime = entry.date
-            case .notice:
-                stats.warningCount += 1
-            case .info:
-                stats.infoCount += 1
-            case .debug:
-                stats.debugCount += 1
-            default:
-                break
-            }
-        }
-
-        if allLogEntries.isEmpty {
-            return buildNoLogsMessage()
-        }
-
-        return buildFormattedOutput(entries: allLogEntries, stats: stats, maxEntries: maxEntries)
-    }
-
-    nonisolated private static func fetchLogsInBackground(maxEntries: Int = 100) async -> String {
-        autoreleasepool {
-            fetchLogsSync(maxEntries: maxEntries)
-        }
-    }
-
-    /// Lọc bỏ các log hệ thống không liên quan đến PHTV
-    nonisolated private static func shouldFilterOut(message: String, subsystem: String, level: OSLogEntryLog.Level) -> Bool {
-        // Luôn giữ lại ERROR và FAULT - quan trọng để debug
-        if level == .error || level == .fault {
-            // Nhưng lọc bỏ một số error hệ thống không liên quan
-            let systemErrors = [
-                "HALC_Proxy", "IOWorkLoop", "AddInstanceForFactory",
-                "Reporter disconnected", "task name port"
-            ]
-            for pattern in systemErrors {
-                if message.contains(pattern) {
-                    return true
-                }
-            }
-            return false
-        }
-
-        // Giữ lại log từ PHTV subsystem
-        if subsystem.contains("phtv") || subsystem.contains("PHTV") {
-            return false
-        }
-
-        // Giữ lại log có chứa từ khóa quan trọng của PHTV
-        let keepPatterns = [
-            "[PHTV", "PHTV]", "[phtv",
-            "[Permission]", "[Accessibility]",
-            "[SettingsView]", "[InputMethod]",
-            "[Telex]", "[VNI]", "[Vietnamese]",
-            "[Macro]", "[Backend]", "[Sync]",
-            "PHTV Live", "PHTV_LIVE",
-            "com.phamhungtien.phtv"
-        ]
-
-        for pattern in keepPatterns {
-            if message.contains(pattern) {
-                return false
-            }
-        }
-
-        // Lọc bỏ tất cả log hệ thống khác
-        return true
-    }
-
-    nonisolated private static func detectCategory(from message: String) -> String {
-        let lowercased = message.lowercased()
-        if lowercased.contains("input") || lowercased.contains("key") || lowercased.contains("typing") {
-            return "Input"
-        } else if lowercased.contains("sync") || lowercased.contains("save") || lowercased.contains("load") {
-            return "Sync"
-        } else if lowercased.contains("ui") || lowercased.contains("view") || lowercased.contains("window") {
-            return "UI"
-        } else if lowercased.contains("error") || lowercased.contains("fail") || lowercased.contains("crash") {
-            return "Error"
-        } else if lowercased.contains("launch") || lowercased.contains("start") || lowercased.contains("init") {
-            return "Startup"
-        } else if lowercased.contains("macro") {
-            return "Macro"
-        } else if lowercased.contains("vietnamese") || lowercased.contains("telex") || lowercased.contains("vni") {
-            return "VNInput"
-        }
-        return "General"
-    }
-
-    nonisolated private static func buildFormattedOutput(entries: [LogEntry], stats: LogStats, maxEntries: Int = 100) -> String {
-        // Sử dụng mảng thay vì string concatenation để tăng hiệu năng
-        var lines: [String] = []
-        lines.reserveCapacity(maxEntries + 30)
-
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "HH:mm:ss.SSS"
-
-        let fullDateFormatter = DateFormatter()
-        fullDateFormatter.dateFormat = "dd/MM HH:mm:ss"
-
-        // === THỐNG KÊ TỔNG QUAN (rút gọn) ===
-        lines.append("📊 THỐNG KÊ: \(stats.totalCount) log | \(stats.duration)")
-
-        if stats.errorCount > 0 {
-            lines.append("🔴 Lỗi: \(stats.errorCount) | 🟡 Cảnh báo: \(stats.warningCount)")
-        }
-
-        // Lỗi gần nhất - QUAN TRỌNG
-        if let lastError = stats.lastError, let errorTime = stats.lastErrorTime {
-            lines.append("")
-            lines.append("⚠️ LỖI GẦN NHẤT [\(fullDateFormatter.string(from: errorTime))]:")
-            // Hiển thị đầy đủ lỗi (tối đa 10 dòng)
-            let errorLines = lastError.components(separatedBy: .newlines)
-            for line in errorLines.prefix(10) {
-                lines.append("  \(line)")
-            }
-            if errorLines.count > 10 {
-                lines.append("  ... (\(errorLines.count - 10) dòng nữa)")
-            }
-        }
-
-        lines.append("")
-        lines.append("───────────────────────────────────────")
-
-        // === LỖI VÀ CẢNH BÁO (ưu tiên lỗi) ===
-        let errorEntries = entries.filter { $0.level == .error || $0.level == .fault }
-        let warningEntries = entries.filter { $0.level == .notice }
-
-        if !errorEntries.isEmpty || !warningEntries.isEmpty {
-            lines.append("🚨 LỖI VÀ CẢNH BÁO:")
-
-            // Hiển thị tất cả lỗi (tối đa 20)
-            if !errorEntries.isEmpty {
-                lines.append("  📛 Lỗi (\(errorEntries.count)):")
-                for entry in errorEntries.suffix(20) {
-                    let time = dateFormatter.string(from: entry.date)
-                    lines.append("  🔴 [\(time)] \(entry.message)")
-                }
-            }
-
-            // Hiển thị cảnh báo (tối đa 10)
-            if !warningEntries.isEmpty {
-                lines.append("  ⚠️ Cảnh báo (\(warningEntries.count)):")
-                for entry in warningEntries.suffix(10) {
-                    let time = dateFormatter.string(from: entry.date)
-                    lines.append("  🟡 [\(time)] \(entry.message)")
-                }
-            }
-            lines.append("")
-        }
-
-        // === LOG GẦN NHẤT (giới hạn theo maxEntries) ===
-        let recentCount = min(entries.count, maxEntries)
-        lines.append("📋 LOG GẦN NHẤT (\(recentCount) dòng):")
-        for entry in entries.suffix(recentCount) {
-            let time = dateFormatter.string(from: entry.date)
-            // Giới hạn độ dài message cho log thường (không phải error)
-            let msg: String
-            if entry.isImportant {
-                // Error/Fault: hiển thị đầy đủ
-                msg = entry.message
-            } else {
-                // Log thường: giới hạn 200 ký tự
-                msg = entry.message.count > 200 ? String(entry.message.prefix(200)) + "..." : entry.message
-            }
-            lines.append("\(entry.levelEmoji) [\(time)] \(msg)")
-        }
-
-        return lines.joined(separator: "\n")
-    }
-
-    nonisolated private static func categoryIcon(_ category: String) -> String {
-        switch category {
-        case "Input": return "⌨️"
-        case "Sync": return "🔄"
-        case "UI": return "🖼️"
-        case "Error": return "❌"
-        case "Startup": return "🚀"
-        case "Macro": return "📝"
-        case "VNInput": return "🇻🇳"
-        default: return "📌"
-        }
-    }
-
-    nonisolated private static func buildNoLogsMessage() -> String {
-        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "N/A"
-        return """
-        📭 Không tìm thấy nhật ký PHTV gần đây.
-
-        ℹ️ Điều này có thể do:
-        • Ứng dụng mới khởi động
-        • Chưa có hoạt động nào được ghi nhận
-
-        📱 Thông tin ứng dụng:
-        • Phiên bản: \(version)
-        • macOS: \(ProcessInfo.processInfo.operatingSystemVersionString)
-
-        💡 Mẹo: Thử tái tạo lỗi rồi bấm "Làm mới" để lấy log mới.
-        """
     }
 
     /// Tạo báo lỗi với logs đã được fetch sẵn (không block main thread)
@@ -1289,7 +864,7 @@ struct BugReportView: View {
         // Lấy FULL logs cho clipboard (đầy đủ nhất)
         let logs: String
         if appState.includeLogs {
-            logs = await Self.fetchLogsInBackground(maxEntries: 120)
+            logs = await BugReportLogCollector.fetchLogsInBackground(maxEntries: 120)
             logBuffer = logs
         } else {
             logs = ""
@@ -1310,7 +885,7 @@ struct BugReportView: View {
         // Lấy log quan trọng
         let importantLogs: String
         if appState.includeLogs {
-            importantLogs = await Self.fetchImportantLogsInBackground()
+            importantLogs = await BugReportLogCollector.fetchImportantLogsInBackground()
         } else {
             importantLogs = ""
         }
@@ -1329,64 +904,6 @@ struct BugReportView: View {
         }
 
         isSending = false
-    }
-
-    /// Lấy log quan trọng - ƯU TIÊN LỖI trước, sau đó mới đến cảnh báo
-    nonisolated private static func fetchImportantLogsOnly() -> String {
-        var errors: [(time: String, message: String)] = []
-        var warnings: [(time: String, message: String)] = []
-
-        do {
-            let store = try OSLogStore(scope: .currentProcessIdentifier)
-            let position = store.position(date: Date().addingTimeInterval(-30 * 60))
-            let entries = try store.getEntries(at: position)
-
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "HH:mm:ss"
-
-            let skipPatterns = ["HALC_Proxy", "IOWorkLoop", "AddInstanceForFactory", "Reporter disconnected"]
-
-            for entry in entries {
-                if let logEntry = entry as? OSLogEntryLog {
-                    let message = logEntry.composedMessage
-                    guard !message.isEmpty else { continue }
-                    if skipPatterns.contains(where: { message.contains($0) }) { continue }
-
-                    let time = dateFormatter.string(from: logEntry.date)
-                    // Giới hạn 120 ký tự cho URL
-                    let truncatedMsg = message.count > 120 ? String(message.prefix(120)) + "..." : message
-
-                    if logEntry.level == .error || logEntry.level == .fault {
-                        errors.append((time, truncatedMsg))
-                    } else if logEntry.level == .notice {
-                        warnings.append((time, truncatedMsg))
-                    }
-                }
-            }
-        } catch {}
-
-        // Tổng tối đa 20 chỗ, ưu tiên lỗi trước
-        let maxTotal = 20
-        var result: [String] = []
-
-        // Lấy tất cả lỗi (tối đa 20)
-        for (time, msg) in errors.suffix(maxTotal) {
-            result.append("🔴 [\(time)] \(msg)")
-        }
-
-        // Thêm cảnh báo nếu còn chỗ
-        let remainingSlots = maxTotal - result.count
-        if remainingSlots > 0 {
-            for (time, msg) in warnings.suffix(remainingSlots) {
-                result.append("🟡 [\(time)] \(msg)")
-            }
-        }
-
-        return result.joined(separator: "\n")
-    }
-
-    nonisolated private static func fetchImportantLogsInBackground() async -> String {
-        fetchImportantLogsOnly()
     }
 
     /// Tạo báo lỗi ngắn gọn để gửi trực tiếp qua URL (không cần paste)
@@ -1476,7 +993,7 @@ struct BugReportView: View {
         // Lấy FULL logs cho email (không giới hạn như GitHub)
         let fullLogs: String
         if appState.includeLogs {
-            fullLogs = await Self.fetchLogsInBackground(maxEntries: 120)
+            fullLogs = await BugReportLogCollector.fetchLogsInBackground(maxEntries: 120)
         } else {
             fullLogs = ""
         }
@@ -1514,7 +1031,7 @@ struct BugReportView: View {
 
         let logs: String
         if appState.includeLogs {
-            logs = await Self.fetchLogsInBackground(maxEntries: 120)
+            logs = await BugReportLogCollector.fetchLogsInBackground(maxEntries: 120)
         } else {
             logs = ""
         }
@@ -1592,25 +1109,6 @@ struct BugReportView: View {
         let lines = logBuffer.split(separator: "\n", omittingEmptySubsequences: false)
         let tail = lines.suffix(80)
         return tail.joined(separator: "\n")
-    }
-}
-
-struct BugReportDocument: FileDocument {
-    static var readableContentTypes: [UTType] { [phtvMarkdownContentType] }
-
-    var text: String
-
-    init(text: String) {
-        self.text = text
-    }
-
-    init(configuration: ReadConfiguration) throws {
-        let data = configuration.file.regularFileContents ?? Data()
-        text = String(decoding: data, as: UTF8.self)
-    }
-
-    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
-        FileWrapper(regularFileWithContents: Data(text.utf8))
     }
 }
 

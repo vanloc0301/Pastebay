@@ -12,12 +12,39 @@ import AppKit
 @MainActor
 enum SettingsWindowHelper {
     private static var settingsController: SwiftUIWindowController?
+    private static var pendingSettingsSceneOpenTask: Task<Void, Never>?
 
     static func openSettingsWindow() {
-        // First, try to find and show existing settings window
+        pendingSettingsSceneOpenTask?.cancel()
+
+        if focusExistingSettingsWindow() {
+            return
+        }
+
+        NSApp.setActivationPolicy(.regular)
+
+        if openNativeSettingsSceneIfAvailable() {
+            pendingSettingsSceneOpenTask = Task { @MainActor in
+                for _ in 0..<5 {
+                    try? await Task.sleep(for: .milliseconds(80))
+                    guard !Task.isCancelled else { return }
+                    if focusExistingSettingsWindow() {
+                        return
+                    }
+                }
+
+                openControllerBackedSettingsWindow()
+            }
+            return
+        }
+
+        openControllerBackedSettingsWindow()
+    }
+
+    @discardableResult
+    private static func focusExistingSettingsWindow() -> Bool {
         for window in NSApp.windows {
             let identifier = window.identifier?.rawValue ?? ""
-            // SwiftUI Window scenes have identifiers like "settings-AppWindow-1"
             if identifier.hasPrefix("settings") {
                 let alwaysOnTop = AppState.shared.settingsWindowAlwaysOnTop
                 applyWindowConfiguration(to: window, alwaysOnTop: alwaysOnTop)
@@ -34,10 +61,18 @@ enum SettingsWindowHelper {
                 // Activate app
                 NSApp.activate(ignoringOtherApps: true)
 
-                return
+                return true
             }
         }
 
+        return false
+    }
+
+    private static func openNativeSettingsSceneIfAvailable() -> Bool {
+        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+    }
+
+    private static func openControllerBackedSettingsWindow() {
         let controller: SwiftUIWindowController
         if let existingController = settingsController {
             controller = existingController
@@ -56,20 +91,35 @@ enum SettingsWindowHelper {
         controller.show()
     }
 
+    static func configureSettingsSceneWindow(_ window: NSWindow, alwaysOnTop: Bool) {
+        if window.identifier?.rawValue.hasPrefix("settings") != true {
+            window.identifier = NSUserInterfaceItemIdentifier("settings-swiftui-scene")
+        }
+        window.title = "Cài đặt PHTV"
+        window.minSize = NSSize(width: 800, height: 600)
+        applyWindowConfiguration(to: window, alwaysOnTop: alwaysOnTop)
+    }
+
     static func applyWindowConfiguration(to window: NSWindow, alwaysOnTop: Bool) {
         window.level = alwaysOnTop ? .floating : .normal
         window.hidesOnDeactivate = false
         window.isMovableByWindowBackground = false
         window.collectionBehavior = [.managed, .participatesInCycle, .moveToActiveSpace, .fullScreenAuxiliary]
 
-        // Keep the window visually stable when it opens from menu-bar mode.
-        // A transparent settings window on macOS 26 can briefly flash around
-        // the frame while the scene and activation policy are being restored.
-        window.isOpaque = true
-        window.backgroundColor = NSColor.windowBackgroundColor
+        if #available(macOS 26.0, *),
+           SettingsVisualEffects.enableBackgroundExtensionEffect,
+           !NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency {
+            window.isOpaque = false
+            window.backgroundColor = .clear
+        } else {
+            window.isOpaque = true
+            window.backgroundColor = NSColor.windowBackgroundColor
+        }
     }
 
     static func releaseSettingsWindow() {
+        pendingSettingsSceneOpenTask?.cancel()
+        pendingSettingsSceneOpenTask = nil
         settingsController = nil
     }
 }
