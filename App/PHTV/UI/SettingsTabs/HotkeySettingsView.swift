@@ -45,7 +45,7 @@ struct HotkeySettingsView: View {
                     subtitle: "Hoàn tác nhanh khi gõ sai",
                     icon: "arrow.uturn.backward.circle.fill"
                 ) {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 12) {
                         SettingsToggleRow(
                             icon: "arrow.uturn.backward.circle.fill",
                             iconColor: .accentColor,
@@ -57,12 +57,7 @@ struct HotkeySettingsView: View {
                         if appState.restoreOnEscape {
                             Divider()
 
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Chọn phím hoàn tác")
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
-                                    .foregroundStyle(.primary)
-
+                            VStack(alignment: .leading, spacing: 8) {
                                 // Grid of restore keys (3 columns, 3 keys total)
                                 LazyVGrid(columns: [
                                     GridItem(.flexible(), spacing: 10),
@@ -84,41 +79,9 @@ struct HotkeySettingsView: View {
 
                                 // Conflict warning
                                 if hasRestoreHotkeyConflict {
-                                    HStack(spacing: 10) {
-                                        Image(systemName: "exclamationmark.triangle.fill")
-                                            .foregroundStyle(.orange)
-                                            .font(.system(size: 14))
-
-                                        Text("Phím hoàn tác trùng với phím bổ trợ của phím tắt chuyển chế độ")
-                                            .font(.caption)
-                                            .foregroundStyle(.orange)
-
-                                        Spacer()
-                                    }
-                                    .padding(10)
-                                    .background {
-                                        if #available(macOS 26.0, *), SettingsVisualEffects.enableMaterials {
-                                            ZStack {
-                                                PHTVRoundedRect(cornerRadius: 8)
-                                                    .fill(.ultraThinMaterial)
-                                                PHTVRoundedRect(cornerRadius: 8)
-                                                    .fill(Color.orange.opacity(0.1))
-                                            }
-                                            .settingsGlassEffect(cornerRadius: 8)
-                                            .overlay(
-                                                PHTVRoundedRect(cornerRadius: 8)
-                                                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-                                            )
-                                        } else {
-                                            PHTVRoundedRect(cornerRadius: 8)
-                                                .fill(Color.orange.opacity(0.1))
-                                                .overlay(
-                                                    PHTVRoundedRect(cornerRadius: 8)
-                                                        .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-                                                )
-                                        }
-                                    }
-                                    
+                                    Label("Phím hoàn tác trùng với phím bổ trợ của phím tắt chuyển chế độ", systemImage: "exclamationmark.triangle.fill")
+                                        .font(.caption)
+                                        .foregroundStyle(.orange)
                                 }
                             }
                         }

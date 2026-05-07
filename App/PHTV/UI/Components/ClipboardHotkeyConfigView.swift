@@ -98,7 +98,7 @@ struct ClipboardHotkeyConfigView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             // Enable toggle
             SettingsToggleRow(
                 icon: "doc.on.clipboard.fill",
@@ -111,13 +111,8 @@ struct ClipboardHotkeyConfigView: View {
             if appState.enableClipboardHistory {
                 Divider()
 
-                // Modifier Keys Section
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Phím bổ trợ")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.primary)
-
+                // Modifier keys
+                VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 12) {
                         ModifierKeyButton(symbol: "⌃", name: "Control", isOn: clipboardHotkeyControl)
                         ModifierKeyButton(symbol: "⇧", name: "Shift", isOn: clipboardHotkeyShift)
@@ -133,114 +128,81 @@ struct ClipboardHotkeyConfigView: View {
 
                 Divider()
 
-                // Key Selection Section
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
+                // Key Selection - Compact inline row
+                HStack(alignment: .center, spacing: 16) {
+                    HStack(spacing: 4) {
                         Text("Phím chính")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
+                            .font(.body)
                             .foregroundStyle(.primary)
-
                         Text("(tùy chọn)")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                    .layoutPriority(1)
 
-                    HStack(spacing: 16) {
-                        Button(action: {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                isRecording = true
+                    Spacer(minLength: 12)
+
+                    HStack(spacing: 6) {
+                        // Clear button
+                        if !isRecording && appState.clipboardHotkeyKeyCode != modifierOnlyKeyCode {
+                            Button(action: {
+                                appState.clipboardHotkeyKeyCode = modifierOnlyKeyCode
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(.secondary)
+                                    .imageScale(.small)
                             }
+                            .buttonStyle(.plain)
+                        }
+
+                        // Key capture button
+                        Button(action: {
+                            isRecording = true
                         }) {
-                            HStack(spacing: 10) {
+                            HStack(spacing: 6) {
                                 Image(systemName: isRecording ? "keyboard.badge.ellipsis" : "keyboard")
-                                    .font(.system(size: 16, weight: .medium))
+                                    .font(.system(size: 12, weight: .medium))
                                     .foregroundStyle(isRecording ? Color.accentColor : .secondary)
 
                                 Text(keyDisplayText)
-                                    .font(.body)
+                                    .font(.system(size: 12))
                                     .foregroundStyle(isRecording ? Color.accentColor : .primary)
-                                    .animation(.easeInOut(duration: 0.2), value: keyDisplayText)
-
-                                Spacer()
-
-                                if !isRecording && appState.clipboardHotkeyKeyCode != modifierOnlyKeyCode {
-                                    Button(action: {
-                                        withAnimation(.easeInOut(duration: 0.2)) {
-                                            appState.clipboardHotkeyKeyCode = modifierOnlyKeyCode
-                                        }
-                                    }) {
-                                        Image(systemName: "xmark.circle.fill")
-                                            .foregroundStyle(.secondary)
-                                            .imageScale(.medium)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
+                                    .lineLimit(1)
                             }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 10)
-                            .frame(minWidth: 180)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
                             .background {
                                 if #available(macOS 26.0, *), SettingsVisualEffects.enableMaterials {
                                     if isRecording {
-                                        PHTVRoundedRect(cornerRadius: 10)
+                                        PHTVRoundedRect(cornerRadius: 6)
                                             .fill(Color.accentColor.opacity(0.1))
                                             .overlay(
-                                                PHTVRoundedRect(cornerRadius: 10)
+                                                PHTVRoundedRect(cornerRadius: 6)
                                                     .stroke(Color.accentColor, lineWidth: 1)
                                             )
                                     } else {
-                                        PHTVRoundedRect(cornerRadius: 10)
+                                        PHTVRoundedRect(cornerRadius: 6)
                                             .fill(.ultraThinMaterial)
-                                            .settingsGlassEffect(cornerRadius: 10)
+                                            .settingsGlassEffect(cornerRadius: 6)
                                     }
                                 } else {
-                                    PHTVRoundedRect(cornerRadius: 10)
+                                    PHTVRoundedRect(cornerRadius: 6)
                                         .fill(isRecording ? .accentColor.opacity(0.1) : Color(NSColor.controlBackgroundColor))
                                         .overlay(
-                                            PHTVRoundedRect(cornerRadius: 10)
+                                            PHTVRoundedRect(cornerRadius: 6)
                                                 .stroke(isRecording ? .accentColor : Color.gray.opacity(0.3), lineWidth: 1)
                                         )
                                 }
                             }
                         }
                         .buttonStyle(.plain)
-                        .animation(.easeInOut(duration: 0.2), value: isRecording)
                         .background(
                             ClipboardKeyEventHandler(isRecording: $isRecording, appState: appState)
                         )
-
-                        if hasValidHotkey {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Tổ hợp hiện tại")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                Text(currentHotkeyString)
-                                    .font(.system(.body, design: .rounded))
-                                    .fontWeight(.semibold)
-                                    .foregroundStyle(.tint)
-                                    .animation(.easeInOut(duration: 0.2), value: currentHotkeyString)
-                            }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                            .background {
-                                if #available(macOS 26.0, *), SettingsVisualEffects.enableMaterials {
-                                    ZStack {
-                                        PHTVRoundedRect(cornerRadius: 10)
-                                            .fill(.ultraThinMaterial)
-                                        PHTVRoundedRect(cornerRadius: 10)
-                                            .fill(Color.accentColor.opacity(0.08))
-                                    }
-                                    .settingsGlassEffect(cornerRadius: 10)
-                                } else {
-                                    PHTVRoundedRect(cornerRadius: 10)
-                                        .fill(Color.accentColor.opacity(0.08))
-                                }
-                            }
-                            
-                        }
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, SettingsLayout.rowVerticalPadding)
 
                 Divider()
 

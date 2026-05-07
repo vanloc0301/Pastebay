@@ -34,14 +34,9 @@ struct HotkeyConfigView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            // Modifier Keys Section
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Phím bổ trợ")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
-                
+        VStack(alignment: .leading, spacing: 12) {
+            // Modifier keys
+            VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 12) {
                     ModifierKeyButton(symbol: "⌃", name: "Control", isOn: bindable.switchKeyControl)
                     ModifierKeyButton(symbol: "⇧", name: "Shift", isOn: bindable.switchKeyShift)
@@ -49,205 +44,128 @@ struct HotkeyConfigView: View {
                     ModifierKeyButton(symbol: "⌥", name: "Option", isOn: bindable.switchKeyOption)
                     ModifierKeyButton(symbol: "fn", name: "", isOn: bindable.switchKeyFn)
                 }
-                
+
                 Text("Mặc định: Ctrl + Shift (bấm rồi thả)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
                 // Conflict warning
                 if hasRestoreHotkeyConflict {
-                    HStack(spacing: 10) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
-                            .font(.system(size: 14))
-
-                        Text("Phím bổ trợ trùng với phím khôi phục")
-                            .font(.caption)
-                            .foregroundStyle(.orange)
-
-                        Spacer()
-                    }
-                    .padding(10)
-                    .background {
-                        if #available(macOS 26.0, *), SettingsVisualEffects.enableMaterials {
-                            ZStack {
-                                PHTVRoundedRect(cornerRadius: 8)
-                                    .fill(.ultraThinMaterial)
-                                PHTVRoundedRect(cornerRadius: 8)
-                                    .fill(Color.orange.opacity(0.1))
-                            }
-                            .settingsGlassEffect(cornerRadius: 8)
-                            .overlay(
-                                PHTVRoundedRect(cornerRadius: 8)
-                                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-                            )
-                        } else {
-                            PHTVRoundedRect(cornerRadius: 8)
-                                .fill(Color.orange.opacity(0.1))
-                                .overlay(
-                                    PHTVRoundedRect(cornerRadius: 8)
-                                        .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-                                )
-                        }
-                    }
-                    
+                    Label("Phím bổ trợ trùng với phím khôi phục", systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
                 }
             }
 
             Divider()
             
-            // Key Selection Section
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
+            // Key Selection - Compact inline row
+            HStack(alignment: .center, spacing: 16) {
+                HStack(spacing: 4) {
                     Text("Phím chính")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
+                        .font(.body)
                         .foregroundStyle(.primary)
-                    
                     Text("(tùy chọn)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                
-                HStack(spacing: 16) {
-                    // Key selector button
-                    Button(action: {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                            isRecording = true
+                .layoutPriority(1)
+
+                Spacer(minLength: 12)
+
+                HStack(spacing: 6) {
+                    // Clear button
+                    if !isRecording && appState.switchKeyCode != modifierOnlyKeyCode {
+                        Button(action: {
+                            appState.switchKeyCode = modifierOnlyKeyCode
+                            appState.switchKeyName = KeyCode.modifierOnlyDisplayName
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                                .imageScale(.small)
                         }
+                        .buttonStyle(.plain)
+                    }
+
+                    // Key capture button
+                    Button(action: {
+                        isRecording = true
                     }) {
-                        HStack(spacing: 10) {
+                        HStack(spacing: 6) {
                             Image(systemName: isRecording ? "keyboard.badge.ellipsis" : "keyboard")
-                                .font(.system(size: 16, weight: .medium))
+                                .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(isRecording ? Color.accentColor : .secondary)
 
                             Text(keyDisplayText)
-                                .font(.body)
+                                .font(.system(size: 12))
                                 .foregroundStyle(isRecording ? Color.accentColor : .primary)
-                                .animation(.easeInOut(duration: 0.2), value: keyDisplayText)
-
-                            Spacer()
-
-                            // Clear button - only show if a real key is set
-                            if !isRecording && appState.switchKeyCode != modifierOnlyKeyCode {
-                                Button(action: {
-                                        withAnimation(.easeInOut(duration: 0.2)) {
-                                            appState.switchKeyCode = modifierOnlyKeyCode
-                                            appState.switchKeyName = KeyCode.modifierOnlyDisplayName
-                                        }
-                                    }) {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundStyle(.secondary)
-                                        .imageScale(.medium)
-                                }
-                                .buttonStyle(.plain)
-                                
-                            }
+                                .lineLimit(1)
                         }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 10)
-                        .frame(minWidth: 180)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
                         .background {
                             if #available(macOS 26.0, *), SettingsVisualEffects.enableMaterials {
                                 if isRecording {
-                                    PHTVRoundedRect(cornerRadius: 10)
+                                    PHTVRoundedRect(cornerRadius: 6)
                                         .fill(Color.accentColor.opacity(0.1))
                                         .overlay(
-                                            PHTVRoundedRect(cornerRadius: 10)
+                                            PHTVRoundedRect(cornerRadius: 6)
                                                 .stroke(Color.accentColor, lineWidth: 1)
                                         )
                                 } else {
-                                    PHTVRoundedRect(cornerRadius: 10)
+                                    PHTVRoundedRect(cornerRadius: 6)
                                         .fill(.ultraThinMaterial)
-                                        .settingsGlassEffect(cornerRadius: 10)
+                                        .settingsGlassEffect(cornerRadius: 6)
                                 }
                             } else {
-                                PHTVRoundedRect(cornerRadius: 10)
+                                PHTVRoundedRect(cornerRadius: 6)
                                     .fill(isRecording ? .accentColor.opacity(0.1) : Color(NSColor.controlBackgroundColor))
                                     .overlay(
-                                        PHTVRoundedRect(cornerRadius: 10)
+                                        PHTVRoundedRect(cornerRadius: 6)
                                             .stroke(isRecording ? .accentColor : Color.gray.opacity(0.3), lineWidth: 1)
                                     )
                             }
                         }
                     }
                     .buttonStyle(.plain)
-                    .animation(.easeInOut(duration: 0.2), value: isRecording)
                     .background(KeyEventHandler(isRecording: $isRecording, appState: appState))
-                    
-                    // Current Hotkey Display
-                    if hasValidHotkey {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Tổ hợp hiện tại")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, SettingsLayout.rowVerticalPadding)
 
-                            Text(currentHotkeyDisplay)
-                                .font(.system(.body, design: .rounded))
-                                .fontWeight(.semibold)
-                                .foregroundStyle(.tint)
-                                .animation(.easeInOut(duration: 0.2), value: currentHotkeyDisplay)
-                        }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background {
-                            if #available(macOS 26.0, *), SettingsVisualEffects.enableMaterials {
-                                ZStack {
-                                    PHTVRoundedRect(cornerRadius: 10)
-                                        .fill(.ultraThinMaterial)
-                                    PHTVRoundedRect(cornerRadius: 10)
-                                        .fill(Color.accentColor.opacity(0.08))
-                                }
-                                .settingsGlassEffect(cornerRadius: 10)
-                            } else {
-                                PHTVRoundedRect(cornerRadius: 10)
-                                    .fill(Color.accentColor.opacity(0.08))
-                            }
-                        }
-                        
-                    }
-                }
-                
-                // Help text
-                if appState.switchKeyCode == modifierOnlyKeyCode {
-                    Text("💡 Chế độ chỉ dùng phím bổ trợ: Bấm và thả tổ hợp phím để chuyển đổi")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
-                        .padding(.top, 4)
-                }
-                
-                // Beep on mode switch toggle
-                SettingsToggleRow(
-                    icon: "speaker.wave.2.fill",
+            
+            // Beep on mode switch toggle
+            SettingsToggleRow(
+                icon: "speaker.wave.2.fill",
+                iconColor: .accentColor,
+                title: "Phát âm thanh khi chuyển chế độ",
+                subtitle: "Phát beep khi bấm phím tắt",
+                isOn: bindable.beepOnModeSwitch
+            )
+            .padding(.top, 8)
+
+            // Beep volume slider (only show when beep is enabled)
+            if appState.beepOnModeSwitch {
+                SettingsDivider()
+
+                SettingsSliderRow(
+                    icon: "speaker.wave.2",
                     iconColor: .accentColor,
-                    title: "Phát âm thanh khi chuyển chế độ",
-                    subtitle: "Phát beep khi bấm phím tắt",
-                    isOn: bindable.beepOnModeSwitch
-                )
-                .padding(.top, 8)
-
-                // Beep volume slider (only show when beep is enabled)
-                if appState.beepOnModeSwitch {
-                    SettingsDivider()
-
-                    SettingsSliderRow(
-                        icon: "speaker.wave.2",
-                        iconColor: .accentColor,
-                        title: "Âm lượng beep",
-                        subtitle: "Điều chỉnh mức âm lượng tiếng beep",
-                        minValue: 0.0,
-                        maxValue: 1.0,
-                        step: 0.01,
-                        value: bindable.beepVolume,
-                        valueFormatter: { String(format: "%.0f%%", $0 * 100) },
-                        onEditingChanged: { editing in
-                            // Play pop sound on slider release
-                            if !editing && appState.beepVolume > 0 {
-                                BeepManager.shared.play(volume: appState.beepVolume)
-                            }
+                    title: "Âm lượng beep",
+                    subtitle: "Điều chỉnh mức âm lượng tiếng beep",
+                    minValue: 0.0,
+                    maxValue: 1.0,
+                    step: 0.01,
+                    value: bindable.beepVolume,
+                    valueFormatter: { String(format: "%.0f%%", $0 * 100) },
+                    onEditingChanged: { editing in
+                        // Play pop sound on slider release
+                        if !editing && appState.beepVolume > 0 {
+                            BeepManager.shared.play(volume: appState.beepVolume)
                         }
-                    )
-                }
+                    }
+                )
             }
         }
     }
@@ -611,7 +529,7 @@ struct PauseKeyConfigView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             // Enable toggle
             SettingsToggleRow(
                 icon: "pause.fill",
@@ -624,13 +542,7 @@ struct PauseKeyConfigView: View {
             if appState.pauseKeyEnabled {
                 Divider()
 
-                // Key Selection Section
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Chọn phím tạm dừng")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.primary)
-
+                VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 12) {
                         PauseKeyButton(
                             symbol: "⌃",
@@ -651,83 +563,19 @@ struct PauseKeyConfigView: View {
                     Text("Mặc định: Option (⌥)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                }
 
-                // Conflict warnings
-                if hasPauseRestoreConflict {
-                    HStack(spacing: 10) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
-                            .font(.system(size: 14))
-
-                        Text("Phím tạm dừng trùng với phím khôi phục")
+                    // Conflict warnings
+                    if hasPauseRestoreConflict {
+                        Label("Phím tạm dừng trùng với phím khôi phục", systemImage: "exclamationmark.triangle.fill")
                             .font(.caption)
                             .foregroundStyle(.orange)
-
-                        Spacer()
                     }
-                    .padding(10)
-                    .background {
-                        if #available(macOS 26.0, *), SettingsVisualEffects.enableMaterials {
-                            ZStack {
-                                PHTVRoundedRect(cornerRadius: 8)
-                                    .fill(.ultraThinMaterial)
-                                PHTVRoundedRect(cornerRadius: 8)
-                                    .fill(Color.orange.opacity(0.1))
-                            }
-                            .settingsGlassEffect(cornerRadius: 8)
-                            .overlay(
-                                PHTVRoundedRect(cornerRadius: 8)
-                                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-                            )
-                        } else {
-                            PHTVRoundedRect(cornerRadius: 8)
-                                .fill(Color.orange.opacity(0.1))
-                                .overlay(
-                                    PHTVRoundedRect(cornerRadius: 8)
-                                        .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-                                )
-                        }
-                    }
-                    
-                }
 
-                if hasPauseSwitchConflict {
-                    HStack(spacing: 10) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
-                            .font(.system(size: 14))
-
-                        Text("Phím tạm dừng trùng với phím chuyển đổi ngôn ngữ")
+                    if hasPauseSwitchConflict {
+                        Label("Phím tạm dừng trùng với phím chuyển đổi ngôn ngữ", systemImage: "exclamationmark.triangle.fill")
                             .font(.caption)
                             .foregroundStyle(.orange)
-
-                        Spacer()
                     }
-                    .padding(10)
-                    .background {
-                        if #available(macOS 26.0, *), SettingsVisualEffects.enableMaterials {
-                            ZStack {
-                                PHTVRoundedRect(cornerRadius: 8)
-                                    .fill(.ultraThinMaterial)
-                                PHTVRoundedRect(cornerRadius: 8)
-                                    .fill(Color.orange.opacity(0.1))
-                            }
-                            .settingsGlassEffect(cornerRadius: 8)
-                            .overlay(
-                                PHTVRoundedRect(cornerRadius: 8)
-                                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-                            )
-                        } else {
-                            PHTVRoundedRect(cornerRadius: 8)
-                                .fill(Color.orange.opacity(0.1))
-                                .overlay(
-                                    PHTVRoundedRect(cornerRadius: 8)
-                                        .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-                                )
-                        }
-                    }
-                    
                 }
             }
         }
@@ -870,7 +718,7 @@ struct EmojiHotkeyConfigView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             // Enable toggle
             SettingsToggleRow(
                 icon: "smiley.fill",
@@ -883,13 +731,8 @@ struct EmojiHotkeyConfigView: View {
             if appState.enableEmojiHotkey {
                 Divider()
 
-                // Modifier Keys Section
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Phím bổ trợ")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.primary)
-
+                // Modifier keys
+                VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 12) {
                         ModifierKeyButton(symbol: "⌃", name: "Control", isOn: emojiHotkeyControl)
                         ModifierKeyButton(symbol: "⇧", name: "Shift", isOn: emojiHotkeyShift)
@@ -905,130 +748,79 @@ struct EmojiHotkeyConfigView: View {
 
                 Divider()
 
-                // Key Selection Section
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
+                // Key Selection - Compact inline row
+                HStack(alignment: .center, spacing: 16) {
+                    HStack(spacing: 4) {
                         Text("Phím chính")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
+                            .font(.body)
                             .foregroundStyle(.primary)
-
                         Text("(tùy chọn)")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                    .layoutPriority(1)
 
-                    HStack(spacing: 16) {
-                        // Key selector button
-                        Button(action: {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                isRecording = true
+                    Spacer(minLength: 12)
+
+                    HStack(spacing: 6) {
+                        // Clear button
+                        if !isRecording && appState.emojiHotkeyKeyCode != modifierOnlyKeyCode {
+                            Button(action: {
+                                appState.emojiHotkeyKeyCode = modifierOnlyKeyCode
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(.secondary)
+                                    .imageScale(.small)
                             }
+                            .buttonStyle(.plain)
+                        }
+
+                        // Key capture button
+                        Button(action: {
+                            isRecording = true
                         }) {
-                            HStack(spacing: 10) {
+                            HStack(spacing: 6) {
                                 Image(systemName: isRecording ? "keyboard.badge.ellipsis" : "keyboard")
-                                    .font(.system(size: 16, weight: .medium))
+                                    .font(.system(size: 12, weight: .medium))
                                     .foregroundStyle(isRecording ? Color.accentColor : .secondary)
 
                                 Text(keyDisplayText)
-                                    .font(.body)
+                                    .font(.system(size: 12))
                                     .foregroundStyle(isRecording ? Color.accentColor : .primary)
-                                    .animation(.easeInOut(duration: 0.2), value: keyDisplayText)
-
-                                Spacer()
-
-                                // Clear button - only show if a real key is set
-                                if !isRecording && appState.emojiHotkeyKeyCode != modifierOnlyKeyCode {
-                                    Button(action: {
-                                        withAnimation(.easeInOut(duration: 0.2)) {
-                                            appState.emojiHotkeyKeyCode = modifierOnlyKeyCode
-                                        }
-                                    }) {
-                                        Image(systemName: "xmark.circle.fill")
-                                            .foregroundStyle(.secondary)
-                                            .imageScale(.medium)
-                                    }
-                                    .buttonStyle(.plain)
-                                    
-                                }
+                                    .lineLimit(1)
                             }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 10)
-                            .frame(minWidth: 180)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
                             .background {
                                 if #available(macOS 26.0, *), SettingsVisualEffects.enableMaterials {
                                     if isRecording {
-                                        PHTVRoundedRect(cornerRadius: 10)
+                                        PHTVRoundedRect(cornerRadius: 6)
                                             .fill(Color.accentColor.opacity(0.1))
                                             .overlay(
-                                                PHTVRoundedRect(cornerRadius: 10)
+                                                PHTVRoundedRect(cornerRadius: 6)
                                                     .stroke(Color.accentColor, lineWidth: 1)
                                             )
                                     } else {
-                                        PHTVRoundedRect(cornerRadius: 10)
+                                        PHTVRoundedRect(cornerRadius: 6)
                                             .fill(.ultraThinMaterial)
-                                            .settingsGlassEffect(cornerRadius: 10)
+                                            .settingsGlassEffect(cornerRadius: 6)
                                     }
                                 } else {
-                                    PHTVRoundedRect(cornerRadius: 10)
+                                    PHTVRoundedRect(cornerRadius: 6)
                                         .fill(isRecording ? .accentColor.opacity(0.1) : Color(NSColor.controlBackgroundColor))
                                         .overlay(
-                                            PHTVRoundedRect(cornerRadius: 10)
+                                            PHTVRoundedRect(cornerRadius: 6)
                                                 .stroke(isRecording ? .accentColor : Color.gray.opacity(0.3), lineWidth: 1)
                                         )
                                 }
                             }
                         }
                         .buttonStyle(.plain)
-                        .animation(.easeInOut(duration: 0.2), value: isRecording)
                         .background(EmojiKeyEventHandler(isRecording: $isRecording, appState: appState))
-
-                        // Current Hotkey Display
-                        if hasValidHotkey {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Tổ hợp hiện tại")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-
-                                Text(currentHotkeyDisplay)
-                                    .font(.system(.body, design: .rounded))
-                                    .fontWeight(.semibold)
-                                    .foregroundStyle(.tint)
-                                    .animation(.easeInOut(duration: 0.2), value: currentHotkeyDisplay)
-                            }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                            .background {
-                                if #available(macOS 26.0, *), SettingsVisualEffects.enableMaterials {
-                                    ZStack {
-                                        PHTVRoundedRect(cornerRadius: 10)
-                                            .fill(.ultraThinMaterial)
-                                        PHTVRoundedRect(cornerRadius: 10)
-                                            .fill(Color.accentColor.opacity(0.08))
-                                    }
-                                    .settingsGlassEffect(cornerRadius: 10)
-                                } else {
-                                    PHTVRoundedRect(cornerRadius: 10)
-                                        .fill(Color.accentColor.opacity(0.08))
-                                }
-                            }
-                            
-                        }
-                    }
-
-                    // Help text for modifier-only mode
-                    if isModifierOnlyMode {
-                        Text("💡 Chế độ chỉ dùng phím bổ trợ: Bấm và thả tổ hợp phím để mở emoji")
-                            .font(.caption)
-                            .foregroundStyle(.orange)
-                            .padding(.top, 4)
-                    } else {
-                        Text("💡 Mẹo: Dùng tổ hợp phím như ⌘E hoặc ⌃⇧E để mở emoji nhanh")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .padding(.top, 4)
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, SettingsLayout.rowVerticalPadding)
             }
         }
     }
