@@ -53,7 +53,7 @@ struct AboutView: View {
                     VStack(spacing: 0) {
                         AboutInfoRow(title: "Phát triển bởi", value: "Phạm Hùng Tiến")
                         SettingsDivider()
-                        AboutInfoRow(title: "Năm phát hành", value: "2026")
+                        AboutInfoRow(title: "Năm phát hành", value: "2025")
                         SettingsDivider()
                         AboutInfoRow(title: "Công nghệ sử dụng", value: "Swift & SwiftUI")
                     }
@@ -86,7 +86,7 @@ struct AboutView: View {
 
                 // Footer
                 VStack(spacing: 6) {
-                    Text("Copyright © 2026 Phạm Hùng Tiến")
+                    Text("Copyright © 2025 Phạm Hùng Tiến")
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
