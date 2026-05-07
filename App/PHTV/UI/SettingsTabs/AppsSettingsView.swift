@@ -21,7 +21,7 @@ struct AppsSettingsView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 20) {
+            LazyVStack(spacing: SettingsLayout.sectionSpacing) {
                 SettingsHeaderView(
                     title: "Ứng dụng & Tương thích",
                     subtitle: "Quản lý chuyển đổi theo từng ứng dụng và tối ưu khả năng tương thích.",
@@ -207,10 +207,10 @@ struct AppsSettingsView: View {
                     }
                 }
 
-                Spacer(minLength: 20)
+                Spacer(minLength: SettingsLayout.sectionSpacing)
             }
             .frame(maxWidth: .infinity)
-            .padding(20)
+            .padding(SettingsLayout.contentPadding)
         }
         .settingsBackground()
     }

@@ -18,7 +18,7 @@ struct TypingSettingsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: SettingsLayout.sectionSpacing) {
                 SettingsHeaderView(
                     title: "Bộ gõ tiếng Việt",
                     subtitle: "Thiết lập phương pháp gõ, chính tả và các tối ưu để gõ nhanh, đúng.",
@@ -174,10 +174,10 @@ struct TypingSettingsView: View {
                     }
                 }
 
-                Spacer(minLength: 20)
+                Spacer(minLength: SettingsLayout.sectionSpacing)
             }
             .frame(maxWidth: .infinity)
-            .padding(20)
+            .padding(SettingsLayout.contentPadding)
         }
         .settingsBackground()
     }

@@ -72,7 +72,12 @@ enum SettingsWindowHelper {
             window.identifier = NSUserInterfaceItemIdentifier("settings-swiftui-scene")
         }
         window.title = "Cài đặt PHTV"
-        window.minSize = NSSize(width: 800, height: 600)
+        let minimumSize = NSSize(
+            width: SettingsLayout.windowMinSize.width,
+            height: SettingsLayout.windowMinSize.height
+        )
+        window.minSize = minimumSize
+        window.contentMinSize = minimumSize
         applyWindowConfiguration(to: window, alwaysOnTop: alwaysOnTop)
     }
 
@@ -82,8 +87,8 @@ enum SettingsWindowHelper {
         window.isMovableByWindowBackground = false
         window.collectionBehavior = [.managed, .participatesInCycle, .moveToActiveSpace, .fullScreenAuxiliary]
         configureNativeSettingsChrome(for: window)
-        window.isOpaque = true
-        window.backgroundColor = NSColor.windowBackgroundColor
+        window.isOpaque = false
+        window.backgroundColor = .clear
     }
 
     private static func configureNativeSettingsChrome(for window: NSWindow) {

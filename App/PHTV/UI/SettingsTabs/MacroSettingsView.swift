@@ -51,7 +51,7 @@ struct MacroSettingsView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 20) {
+            LazyVStack(spacing: SettingsLayout.sectionSpacing) {
                 SettingsHeaderView(
                     title: "Gõ tắt & Macro",
                     subtitle: "Tạo từ viết tắt, quản lý danh mục và tăng tốc độ nhập liệu.",
@@ -313,10 +313,10 @@ struct MacroSettingsView: View {
                     }
                 }
 
-                Spacer(minLength: 20)
+                Spacer(minLength: SettingsLayout.sectionSpacing)
             }
             .frame(maxWidth: .infinity)
-            .padding(20)
+            .padding(SettingsLayout.contentPadding)
         }
         .settingsBackground()
         .alert("Không thể xử lý file", isPresented: $showFileTransferError) {

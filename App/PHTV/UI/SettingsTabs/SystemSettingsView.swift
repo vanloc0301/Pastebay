@@ -38,7 +38,7 @@ struct SystemSettingsView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 20) {
+            LazyVStack(spacing: SettingsLayout.sectionSpacing) {
                 SettingsHeaderView(
                     title: "Hệ thống & Cập nhật",
                     subtitle: "Quản lý giao diện, khởi động, cập nhật và sao lưu.",
@@ -64,10 +64,10 @@ struct SystemSettingsView: View {
                 toolsSection
                 dataManagementSection
 
-                Spacer(minLength: 20)
+                Spacer(minLength: SettingsLayout.sectionSpacing)
             }
             .frame(maxWidth: .infinity)
-            .padding(20)
+            .padding(SettingsLayout.contentPadding)
         }
         .settingsBackground()
         .sheet(isPresented: $showingConvertTool) {

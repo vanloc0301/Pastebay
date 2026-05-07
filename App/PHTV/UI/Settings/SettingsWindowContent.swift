@@ -28,10 +28,12 @@ struct SettingsWindowContent: View {
     private var configuredSettingsWindowContent: some View {
         if #available(macOS 26.0, *) {
             settingsWindowContent
+                .settingsNativeWindowBackground()
                 .toolbar(removing: .title)
                 .toolbar { settingsToolbarContent }
         } else if #available(macOS 15.0, *) {
             settingsWindowContent
+                .settingsNativeWindowBackground()
                 .toolbar(removing: .title)
                 .toolbar { settingsToolbarContent }
         } else {

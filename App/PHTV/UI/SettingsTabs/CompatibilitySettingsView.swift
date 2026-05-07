@@ -15,7 +15,7 @@ struct CompatibilitySettingsView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 20) {
+            LazyVStack(spacing: SettingsLayout.sectionSpacing) {
                 SettingsHeaderView(
                     title: "Tương thích nâng cao",
                     subtitle: "Tinh chỉnh cho bố cục đặc biệt và công cụ bên thứ ba.",
@@ -79,10 +79,10 @@ struct CompatibilitySettingsView: View {
                     }
                 }
 
-                Spacer(minLength: 20)
+                Spacer(minLength: SettingsLayout.sectionSpacing)
             }
             .frame(maxWidth: .infinity)
-            .padding(20)
+            .padding(SettingsLayout.contentPadding)
         }
         .settingsBackground()
     }

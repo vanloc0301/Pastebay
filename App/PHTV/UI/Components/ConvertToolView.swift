@@ -145,7 +145,7 @@ struct ConvertToolView: View {
                         resultPreviewCard
                     }
                 }
-                .padding(20)
+                .padding(SettingsLayout.contentPadding)
             }
 
             Divider()

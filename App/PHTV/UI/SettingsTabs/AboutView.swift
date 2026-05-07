@@ -12,7 +12,7 @@ struct AboutView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 24) {
+            LazyVStack(spacing: SettingsLayout.sectionSpacing) {
                 // App Icon and Name
                 VStack(spacing: 16) {
                     AppIconView()
@@ -116,7 +116,7 @@ struct AboutView: View {
                 }
                 .padding(.horizontal, 20)
 
-                Spacer(minLength: 20)
+                Spacer(minLength: SettingsLayout.sectionSpacing)
 
                 // Footer
                 VStack(spacing: 6) {
@@ -211,7 +211,7 @@ struct DonateQRPopoverView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
-        .padding(20)
+        .padding(SettingsLayout.contentPadding)
         .frame(width: 260)
     }
 }

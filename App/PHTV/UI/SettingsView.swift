@@ -81,8 +81,14 @@ struct SettingsView: View {
         } detail: {
             detailView
                 .environment(appState)
-                .frame(minWidth: 400, minHeight: 400)
+                .frame(
+                    minWidth: SettingsLayout.detailMinWidth,
+                    minHeight: SettingsLayout.detailMinHeight
+                )
         }
+        .navigationTitle("Cài đặt PHTV")
+        .conditionalSearchable(text: $searchText, prompt: "Tìm nhanh cài đặt…")
+        .settingsSearchToolbarBehavior()
     }
 
     @ViewBuilder
@@ -95,7 +101,6 @@ struct SettingsView: View {
                         ForEach(section.tabs) { tab in
                             SettingsSidebarRow(tab: tab)
                                 .tag(tab)
-                                .listRowInsets(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))
                         }
                     }
                 }
@@ -128,8 +133,11 @@ struct SettingsView: View {
             }
         }
         .listStyle(.sidebar)
-        .conditionalSearchable(text: $searchText, prompt: "Tìm nhanh cài đặt…")
-        .navigationSplitViewColumnWidth(min: 160, ideal: 200, max: 240)
+        .navigationSplitViewColumnWidth(
+            min: SettingsLayout.sidebarMinWidth,
+            ideal: SettingsLayout.sidebarIdealWidth,
+            max: SettingsLayout.sidebarMaxWidth
+        )
         .animation(nil, value: selectedTab)
 
         if #available(macOS 26.0, *) {
@@ -195,16 +203,12 @@ struct SettingsSidebarRow: View {
     var body: some View {
         Label {
             Text(tab.title)
-                .font(.system(size: 13, weight: .medium))
+                .font(.body)
         } icon: {
             Image(systemName: tab.iconName)
-                .font(.system(size: 14, weight: .medium))
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(.secondary)
-                .frame(width: 18)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, 2)
         .contentShape(Rectangle())
     }
 }

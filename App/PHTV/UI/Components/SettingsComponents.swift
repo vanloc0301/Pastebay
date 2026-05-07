@@ -8,6 +8,26 @@
 
 import SwiftUI
 
+enum SettingsLayout {
+    static let contentMaxWidth: CGFloat = 680
+    static let contentPadding: CGFloat = 16
+    static let sectionSpacing: CGFloat = 16
+    static let cardCornerRadius: CGFloat = 10
+    static let cardContentHorizontalPadding: CGFloat = 12
+    static let cardContentVerticalPadding: CGFloat = 8
+    static let rowVerticalPadding: CGFloat = 7
+    static let rowControlColumnWidth: CGFloat = 168
+    static let toggleControlWidth: CGFloat = 54
+    static let defaultPickerWidth: CGFloat = 148
+    static let sidebarMinWidth: CGFloat = 150
+    static let sidebarIdealWidth: CGFloat = 184
+    static let sidebarMaxWidth: CGFloat = 220
+    static let detailMinWidth: CGFloat = 360
+    static let detailMinHeight: CGFloat = 360
+    static let windowMinSize = CGSize(width: 720, height: 500)
+    static let windowIdealSize = CGSize(width: 840, height: 540)
+}
+
 // MARK: - Settings Card
 
 struct SettingsCard<Content: View, Trailing: View>: View {
@@ -15,7 +35,6 @@ struct SettingsCard<Content: View, Trailing: View>: View {
     let subtitle: String?
     let trailing: Trailing
     let content: Content
-    @Environment(\.colorScheme) private var colorScheme
 
     init(
         title: String,
@@ -32,7 +51,7 @@ struct SettingsCard<Content: View, Trailing: View>: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 7) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
@@ -55,25 +74,12 @@ struct SettingsCard<Content: View, Trailing: View>: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             content
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+                .padding(.horizontal, SettingsLayout.cardContentHorizontalPadding)
+                .padding(.vertical, SettingsLayout.cardContentVerticalPadding)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(settingsGroupedBackground)
+                .background(SettingsSurfaceBackground(cornerRadius: SettingsLayout.cardCornerRadius, material: .regularMaterial))
         }
-        .frame(maxWidth: 720, alignment: .leading)
-    }
-
-    private var settingsGroupedBackground: some View {
-        RoundedRectangle(cornerRadius: 10, style: .continuous)
-            .fill(Color(NSColor.controlBackgroundColor).opacity(colorScheme == .dark ? 0.98 : 1.0))
-            .overlay(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .stroke(settingsSurfaceBorderColor, lineWidth: 0.75)
-            )
-    }
-
-    private var settingsSurfaceBorderColor: Color {
-        Color.primary.opacity(colorScheme == .dark ? 0.18 : 0.12)
+        .frame(maxWidth: SettingsLayout.contentMaxWidth, alignment: .leading)
     }
 }
 
@@ -90,7 +96,7 @@ struct SettingsPickerRow<SelectionValue: Hashable, PickerContent: View>: View {
         title: String,
         subtitle: String? = nil,
         selection: Binding<SelectionValue>,
-        controlWidth: CGFloat = 160,
+        controlWidth: CGFloat = SettingsLayout.defaultPickerWidth,
         @ViewBuilder content: () -> PickerContent
     ) {
         self.title = title
@@ -101,21 +107,9 @@ struct SettingsPickerRow<SelectionValue: Hashable, PickerContent: View>: View {
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.body)
-                    .foregroundStyle(.primary)
-
-                if let subtitle {
-                    Text(subtitle)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+        HStack(alignment: .center, spacing: 16) {
+            rowLabel
+                .layoutPriority(1)
 
             Spacer(minLength: 12)
 
@@ -125,9 +119,28 @@ struct SettingsPickerRow<SelectionValue: Hashable, PickerContent: View>: View {
             .labelsHidden()
             .controlSize(.small)
             .frame(width: controlWidth)
+            .frame(width: SettingsLayout.rowControlColumnWidth, alignment: .trailing)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, 8)
+        .padding(.vertical, SettingsLayout.rowVerticalPadding)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var rowLabel: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.body)
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+
+            if let subtitle {
+                Text(subtitle)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
     }
 }
 
@@ -141,19 +154,9 @@ struct SettingsToggleRow: View {
     @Binding var isOn: Bool
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.body)
-                    .foregroundStyle(.primary)
-
-                Text(subtitle)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+        HStack(alignment: .center, spacing: 16) {
+            rowLabel
+                .layoutPriority(1)
 
             Spacer(minLength: 12)
 
@@ -161,10 +164,28 @@ struct SettingsToggleRow: View {
                 .labelsHidden()
                 .toggleStyle(.switch)
                 .controlSize(.small)
+                .fixedSize()
+                .frame(width: SettingsLayout.toggleControlWidth, alignment: .trailing)
+                .frame(width: SettingsLayout.rowControlColumnWidth, alignment: .trailing)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, 8)
+        .padding(.vertical, SettingsLayout.rowVerticalPadding)
         .accessibilityElement(children: .combine)
+    }
+
+    private var rowLabel: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.body)
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+
+            Text(subtitle)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 }
 
@@ -267,7 +288,7 @@ struct StatusCard: View {
             }
         }
         .padding(14)
-        .frame(maxWidth: 720)
+        .frame(maxWidth: SettingsLayout.contentMaxWidth)
         .background(Color(NSColor.controlBackgroundColor), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 8, style: .continuous)

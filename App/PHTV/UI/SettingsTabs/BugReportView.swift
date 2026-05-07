@@ -94,7 +94,7 @@ struct BugReportView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 20) {
+            LazyVStack(spacing: SettingsLayout.sectionSpacing) {
                 SettingsHeaderView(
                     title: "Báo lỗi & Hỗ trợ",
                     subtitle: "Gửi thông tin chi tiết để hỗ trợ nhanh và chính xác.",
@@ -110,10 +110,10 @@ struct BugReportView: View {
                 // Actions
                 actionsSection
 
-                Spacer(minLength: 20)
+                Spacer(minLength: SettingsLayout.sectionSpacing)
             }
             .frame(maxWidth: .infinity)
-            .padding(20)
+            .padding(SettingsLayout.contentPadding)
         }
         .settingsBackground()
         .alert("Đã sao chép", isPresented: $showCopiedAlert) {

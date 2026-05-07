@@ -45,7 +45,12 @@ struct PHTVApp: App {
         Settings {
             SettingsWindowContent()
                 .environment(AppState.shared)
-                .frame(minWidth: 800, minHeight: 600)
+                .frame(
+                    minWidth: SettingsLayout.windowMinSize.width,
+                    idealWidth: SettingsLayout.windowIdealSize.width,
+                    minHeight: SettingsLayout.windowMinSize.height,
+                    idealHeight: SettingsLayout.windowIdealSize.height
+                )
         }
         .commands {
             CommandGroup(replacing: .appSettings) {

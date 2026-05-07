@@ -373,12 +373,12 @@ struct SettingsHeaderView<Trailing: View>: View {
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
+        HStack(alignment: .center, spacing: 10) {
             iconTile
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.title3)
+                    .font(.headline)
                     .fontWeight(.semibold)
                     .foregroundStyle(.primary)
 
@@ -393,10 +393,10 @@ struct SettingsHeaderView<Trailing: View>: View {
 
             trailing
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .background(headerBackground)
-        .frame(maxWidth: 720, alignment: .leading)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(SettingsSurfaceBackground(cornerRadius: SettingsLayout.cardCornerRadius, material: .thinMaterial))
+        .frame(maxWidth: SettingsLayout.contentMaxWidth, alignment: .leading)
     }
 
     private var iconTile: some View {
@@ -413,20 +413,39 @@ struct SettingsHeaderView<Trailing: View>: View {
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(accent)
         }
-        .frame(width: 40, height: 40)
+        .frame(width: 36, height: 36)
     }
 
-    private var headerBackground: some View {
-        RoundedRectangle(cornerRadius: 10, style: .continuous)
-            .fill(Color(NSColor.controlBackgroundColor).opacity(colorScheme == .dark ? 0.98 : 1.0))
-            .overlay(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .stroke(headerBorderColor, lineWidth: 0.75)
-            )
-    }
+}
 
-    private var headerBorderColor: Color {
-        Color.primary.opacity(colorScheme == .dark ? 0.18 : 0.12)
+/// Native grouped surface used by Settings detail content.
+struct SettingsSurfaceBackground: View {
+    let cornerRadius: CGFloat
+    var material: Material = .regularMaterial
+
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        Group {
+            if #available(macOS 26.0, *),
+               SettingsVisualEffects.enableMaterials,
+               !reduceTransparency {
+                PHTVRoundedRect(cornerRadius: cornerRadius)
+                    .fill(material)
+                    .settingsGlassEffect(cornerRadius: cornerRadius)
+            } else {
+                PHTVRoundedRect(cornerRadius: cornerRadius)
+                    .fill(Color(NSColor.controlBackgroundColor).opacity(colorScheme == .dark ? 0.96 : 1.0))
+            }
+        }
+        .overlay(SettingsSurfaceBorder(cornerRadius: cornerRadius))
+        .shadow(
+            color: Color.black.opacity(colorScheme == .dark ? 0.18 : 0.06),
+            radius: colorScheme == .dark ? 10 : 6,
+            x: 0,
+            y: 1
+        )
     }
 }
 
@@ -483,16 +502,34 @@ struct SettingsSurfaceColors {
 /// Central toggle for heavy visual effects in Settings.
 /// Disabled to prevent large GPU/memory spikes on macOS 26 when switching tabs.
 enum SettingsVisualEffects {
-    static let enableGlassEffects = false
-    static let enableMaterials = false
+    static var enableGlassEffects: Bool {
+        if #available(macOS 26.0, *) {
+            return true
+        }
+        return false
+    }
+
+    static var enableMaterials: Bool {
+        if #available(macOS 26.0, *) {
+            return true
+        }
+        return false
+    }
 }
 
 /// Applies consistent background for settings views
 struct SettingsViewBackground: ViewModifier {
     func body(content: Content) -> some View {
-        content
-            .scrollContentBackground(.hidden)
-            .background(Color(NSColor.windowBackgroundColor).ignoresSafeArea())
+        if #available(macOS 26.0, *) {
+            content
+                .scrollContentBackground(.hidden)
+                .scrollEdgeEffectStyle(.soft, for: .top)
+                .background(Color.clear.ignoresSafeArea())
+        } else {
+            content
+                .scrollContentBackground(.hidden)
+                .background(Color(NSColor.windowBackgroundColor).ignoresSafeArea())
+        }
     }
 }
 
@@ -505,6 +542,26 @@ extension View {
     /// Applies searchable modifier to the sidebar
     func conditionalSearchable(text: Binding<String>, prompt: String) -> some View {
         self.searchable(text: text, placement: .sidebar, prompt: prompt)
+    }
+
+    /// Uses the macOS 26 native search-toolbar behavior when available.
+    @ViewBuilder
+    func settingsSearchToolbarBehavior() -> some View {
+        if #available(macOS 26.0, *) {
+            self.searchToolbarBehavior(.automatic)
+        } else {
+            self
+        }
+    }
+
+    /// Lets the Settings scene use the native window material instead of an opaque fill.
+    @ViewBuilder
+    func settingsNativeWindowBackground() -> some View {
+        if #available(macOS 15.0, *) {
+            self.containerBackground(.regularMaterial, for: .window)
+        } else {
+            self
+        }
     }
 
     /// Compatible foregroundStyle
