@@ -299,17 +299,16 @@ struct ModifierKeyButton: View {
                 isOn.toggle()
             }
         }) {
-            VStack(spacing: 6) {
+            HStack(spacing: 4) {
                 Text(symbol)
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(isOn ? .white : .primary)
+                    .font(.system(size: 14, weight: .semibold))
 
                 Text(name)
-                    .font(.caption2)
-                    .foregroundStyle(isOn ? .white.opacity(0.9) : .secondary)
+                    .font(.system(size: 11))
             }
+            .foregroundStyle(isOn ? .white : .primary)
             .frame(maxWidth: .infinity)
-            .frame(height: 56)
+            .frame(height: 32)
             .background {
                 if isOn {
                     PHTVRoundedRect(cornerRadius: 10)
@@ -753,17 +752,16 @@ struct PauseKeyButton: View {
                 selectedKeyName = name
             }
         }) {
-            VStack(spacing: 6) {
+            HStack(spacing: 4) {
                 Text(symbol)
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(isSelected ? .white : .primary)
+                    .font(.system(size: 14, weight: .semibold))
 
                 Text(name)
-                    .font(.caption2)
-                    .foregroundStyle(isSelected ? .white.opacity(0.9) : .secondary)
+                    .font(.system(size: 11))
             }
+            .foregroundStyle(isSelected ? .white : .primary)
             .frame(maxWidth: .infinity)
-            .frame(height: 56)
+            .frame(height: 32)
             .background {
                 if isSelected {
                     PHTVRoundedRect(cornerRadius: 10)
