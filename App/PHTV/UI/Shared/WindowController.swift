@@ -97,7 +97,7 @@ extension SwiftUIWindowController {
                 width: SettingsLayout.windowIdealSize.width,
                 height: SettingsLayout.windowIdealSize.height
             ),
-            unifiedTitlebar: true,
+            unifiedTitlebar: false,
             frameAutosaveName: "PHSettingsWindow"
         )
         // Set minimum window size to prevent sidebar from being too narrow

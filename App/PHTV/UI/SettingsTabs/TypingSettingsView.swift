@@ -19,23 +19,6 @@ struct TypingSettingsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: SettingsLayout.sectionSpacing) {
-                SettingsHeaderView(
-                    title: "Bộ gõ tiếng Việt",
-                    subtitle: "Thiết lập phương pháp gõ, chính tả và các tối ưu để gõ nhanh, đúng.",
-                    icon: "keyboard.fill"
-                ) {
-                    VStack(alignment: .trailing, spacing: 6) {
-                        SettingsStatusPill(
-                            text: appState.isEnabled ? "Chế độ: Tiếng Việt" : "Chế độ: Tiếng Anh",
-                            color: appState.isEnabled ? .accentColor : .secondary
-                        )
-                        SettingsStatusPill(
-                            text: appState.inputMethod.displayName,
-                            color: .compatTeal
-                        )
-                    }
-                }
-
                 // Status Card (only show when permission is missing)
                 if !appState.isTypingPermissionReady {
                     StatusCard(runtimeHealth: appState.typingRuntimeHealth)

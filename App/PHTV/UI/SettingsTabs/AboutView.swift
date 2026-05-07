@@ -9,112 +9,80 @@
 import SwiftUI
 
 struct AboutView: View {
+    private var versionString: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.1.0"
+    }
 
     var body: some View {
         ScrollView {
             LazyVStack(spacing: SettingsLayout.sectionSpacing) {
-                // App Icon and Name
-                VStack(spacing: 16) {
-                    AppIconView()
-                        .frame(width: 100, height: 100)
-                        .clipShape(PHTVRoundedRect(cornerRadius: 22))
+                SettingsCard(
+                    title: "Ứng dụng",
+                    subtitle: "Bộ gõ tiếng Việt dành cho macOS",
+                    icon: "app"
+                ) {
+                    HStack(alignment: .center, spacing: 14) {
+                        AppIconView()
+                            .frame(width: 56, height: 56)
 
-                    VStack(spacing: 6) {
-                        Text("PHTV")
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("PHTV")
+                                .font(.title2)
+                                .fontWeight(.semibold)
 
-                        Text("Precision Hybrid Typing Vietnamese")
-                            .font(.system(size: 13, weight: .medium).italic())
-                            .foregroundStyle(.secondary)
+                            Text("Precision Hybrid Typing Vietnamese")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
 
-                        Text("Bộ gõ tiếng Việt dành cho macOS")
+                            Text("Phiên bản \(versionString)")
+                                .font(.caption)
+                                .foregroundStyle(.tertiary)
+                                .textSelection(.enabled)
+                        }
+
+                        Spacer(minLength: 0)
+                    }
+                }
+
+                SettingsCard(
+                    title: "Thông tin",
+                    subtitle: "Thông tin phát triển và nền tảng",
+                    icon: "info.circle"
+                ) {
+                    VStack(spacing: 0) {
+                        AboutInfoRow(title: "Phát triển bởi", value: "Phạm Hùng Tiến")
+                        SettingsDivider()
+                        AboutInfoRow(title: "Năm phát hành", value: "2026")
+                        SettingsDivider()
+                        AboutInfoRow(title: "Công nghệ sử dụng", value: "Swift & SwiftUI")
+                    }
+                }
+
+                SettingsCard(
+                    title: "Hỗ trợ phát triển",
+                    subtitle: "Ủng hộ để PHTV tiếp tục được cải thiện",
+                    icon: "heart"
+                ) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Nếu PHTV hữu ích, bạn có thể ủng hộ để giúp phát triển thêm các tính năng mới.")
                             .font(.subheadline)
-                            .foregroundStyle(.tertiary)
-                    }
-
-                    // Version Badge
-                    HStack(spacing: 8) {
-                        Text("Phiên bản")
-                            .font(.caption)
                             .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
 
-                        Text(
-                            "v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.1.0")"
-                        )
-                        .font(.system(.caption, design: .monospaced))
-                        .fontWeight(.semibold)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Capsule().fill(Color.accentColor.opacity(0.15)))
-                        .foregroundStyle(Color.accentColor)
-                    }
-                }
-                .padding(.top, 20)
-
-                Divider()
-                    .padding(.horizontal, 40)
-
-                // Developer Info
-                VStack(spacing: 16) {
-                    AboutInfoCard(
-                        icon: "person.circle.fill",
-                        iconColor: .accentColor,
-                        title: "Phát triển bởi",
-                        value: "Phạm Hùng Tiến"
-                    )
-
-                    AboutInfoCard(
-                        icon: "calendar.circle.fill",
-                        iconColor: .accentColor,
-                        title: "Năm phát hành",
-                        value: "2026"
-                    )
-
-                    AboutInfoCard(
-                        icon: "swift",
-                        iconColor: .accentColor,
-                        title: "Công nghệ sử dụng",
-                        value: "Swift & SwiftUI"
-                    )
-                }
-                .padding(.horizontal, 20)
-
-                Divider()
-                    .padding(.horizontal, 40)
-
-                // Support Section
-                VStack(spacing: 16) {
-                    Text("Hỗ trợ phát triển")
-                        .font(.headline)
-                        .foregroundStyle(.primary)
-
-                    Text(
-                        "Nếu PHTV hữu ích, bạn có thể ủng hộ để giúp phát triển thêm các tính năng mới"
-                    )
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 20)
-
-                    if let donateImage = NSImage(named: "donate") {
-                        VStack(spacing: 8) {
+                        if let donateImage = NSImage(named: "donate") {
                             Image(nsImage: donateImage)
                                 .resizable()
                                 .scaledToFit()
-                                .frame(maxWidth: 220)
-                                .clipShape(PHTVRoundedRect(cornerRadius: 12))
+                                .frame(maxWidth: 180)
+                                .frame(maxWidth: .infinity, alignment: .center)
 
                             Text("Quét mã để ủng hộ")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                        }
-                        .padding(16)
-                        .background {
-                            AboutCardBackground(cornerRadius: 16)
+                                .frame(maxWidth: .infinity, alignment: .center)
                         }
                     }
                 }
-                .padding(.horizontal, 20)
 
                 Spacer(minLength: SettingsLayout.sectionSpacing)
 
@@ -135,59 +103,25 @@ struct AboutView: View {
     }
 }
 
-struct AboutInfoCard: View {
-    let icon: String
-    let iconColor: Color
+private struct AboutInfoRow: View {
     let title: String
     let value: String
 
     var body: some View {
-        HStack(spacing: 14) {
-            // Icon background - no glass effect to avoid glass-on-glass
-            // (parent row already has glass background)
-            SettingsIconTile(color: iconColor, size: 42, cornerRadius: 10) {
-                Image(systemName: icon)
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(iconColor)
-            }
+        HStack(alignment: .firstTextBaseline, spacing: 16) {
+            Text(title)
+                .font(.body)
+                .foregroundStyle(.primary)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            Spacer(minLength: 12)
 
-                Text(value)
-                    .font(.body)
-                    .fontWeight(.medium)
-                    .foregroundStyle(.primary)
-            }
-
-            Spacer()
+            Text(value)
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.trailing)
+                .textSelection(.enabled)
         }
-        .padding(14)
-        .frame(maxWidth: 700)
-        .background {
-            AboutCardBackground(cornerRadius: 12)
-        }
-    }
-}
-
-private struct AboutCardBackground: View {
-    let cornerRadius: CGFloat
-    @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-
-    var body: some View {
-        let fillColor = Color(NSColor.controlBackgroundColor).opacity(colorScheme == .light ? 0.95 : 0.62)
-        if SettingsVisualEffects.enableMaterials, !reduceTransparency {
-            PHTVRoundedRect(cornerRadius: cornerRadius)
-                .fill(.regularMaterial)
-                .overlay(SettingsSurfaceBorder(cornerRadius: cornerRadius))
-        } else {
-            PHTVRoundedRect(cornerRadius: cornerRadius)
-                .fill(fillColor)
-                .overlay(SettingsSurfaceBorder(cornerRadius: cornerRadius))
-        }
+        .padding(.vertical, SettingsLayout.rowVerticalPadding)
     }
 }
 
@@ -204,7 +138,6 @@ struct DonateQRPopoverView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 210, height: 210)
-                    .clipShape(PHTVRoundedRect(cornerRadius: 12))
             }
 
             Text("Quét mã để ủng hộ")

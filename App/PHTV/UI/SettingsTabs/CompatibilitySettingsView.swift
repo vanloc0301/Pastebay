@@ -16,12 +16,6 @@ struct CompatibilitySettingsView: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: SettingsLayout.sectionSpacing) {
-                SettingsHeaderView(
-                    title: "Tương thích nâng cao",
-                    subtitle: "Tinh chỉnh cho bố cục đặc biệt và công cụ bên thứ ba.",
-                    icon: "puzzlepiece.extension.fill"
-                )
-
                 // Keyboard Layout Compatibility
                 SettingsCard(
                     title: "Bàn phím",

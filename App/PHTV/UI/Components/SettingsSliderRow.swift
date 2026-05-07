@@ -22,17 +22,10 @@ struct SettingsSliderRow: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 1) {
-                Text(title)
-                    .font(.body)
-                    .foregroundStyle(.primary)
-
-                Text(subtitle)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            Text(title)
+                .font(.body)
+                .foregroundStyle(.primary)
+                .lineLimit(1)
             .frame(maxWidth: .infinity, alignment: .leading)
 
             HStack(spacing: 8) {
@@ -55,7 +48,7 @@ struct SettingsSliderRow: View {
                     .frame(minWidth: 40, alignment: .trailing)
             }
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, SettingsLayout.rowVerticalPadding)
     }
 }
 

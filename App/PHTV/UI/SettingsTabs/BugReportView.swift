@@ -95,12 +95,6 @@ struct BugReportView: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: SettingsLayout.sectionSpacing) {
-                SettingsHeaderView(
-                    title: "Báo lỗi & Hỗ trợ",
-                    subtitle: "Gửi thông tin chi tiết để hỗ trợ nhanh và chính xác.",
-                    icon: "ladybug.fill"
-                )
-
                 // Bug Information Form
                 bugInfoSection
 

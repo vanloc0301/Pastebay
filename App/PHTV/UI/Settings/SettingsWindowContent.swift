@@ -28,12 +28,10 @@ struct SettingsWindowContent: View {
     private var configuredSettingsWindowContent: some View {
         if #available(macOS 26.0, *) {
             settingsWindowContent
-                .settingsNativeWindowBackground()
                 .toolbar(removing: .title)
                 .toolbar { settingsToolbarContent }
         } else if #available(macOS 15.0, *) {
             settingsWindowContent
-                .settingsNativeWindowBackground()
                 .toolbar(removing: .title)
                 .toolbar { settingsToolbarContent }
         } else {
@@ -119,55 +117,25 @@ struct SettingsWindowContent: View {
 
     @ToolbarContentBuilder
     private var settingsToolbarContent: some ToolbarContent {
-        if #available(macOS 26.0, *) {
-            // Flexible spacer pushes the trio to the right edge.
-            // Flexible spacers *between* items break them into separate
-            // glass pills on macOS 26 instead of one merged capsule.
-            ToolbarSpacer(.flexible, placement: .primaryAction)
-            pinToolbarItem
-            ToolbarSpacer(.fixed, placement: .primaryAction)
-            checkForUpdatesToolbarItem
-            ToolbarSpacer(.fixed, placement: .primaryAction)
-            donateToolbarItem
-        } else {
-            pinToolbarItem
-            checkForUpdatesToolbarItem
-            donateToolbarItem
-        }
-    }
-
-    private var pinToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .primaryAction) {
+        ToolbarItemGroup(placement: .primaryAction) {
             Button {
                 appState.settingsWindowAlwaysOnTop.toggle()
             } label: {
                 Image(systemName: appState.settingsWindowAlwaysOnTop ? "pin.fill" : "pin")
             }
-            .help(
-                appState.settingsWindowAlwaysOnTop
-                ? "Bỏ ghim cửa sổ Cài đặt"
-                : "Ghim cửa sổ Cài đặt luôn ở trên"
-            )
-        }
-    }
+            .help(appState.settingsWindowAlwaysOnTop ? "Bỏ ghim cửa sổ Cài đặt" : "Ghim cửa sổ Cài đặt")
 
-    private var checkForUpdatesToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .primaryAction) {
             Button {
                 NotificationCenter.default.post(name: NotificationName.sparkleManualCheck, object: nil)
             } label: {
-                Image(systemName: "arrow.clockwise.circle")
+                Image(systemName: "arrow.clockwise")
             }
             .help("Kiểm tra cập nhật")
-        }
-    }
 
-    private var donateToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .primaryAction) {
             Button {
                 showDonatePopover.toggle()
             } label: {
-                Image(systemName: "cup.and.saucer.fill")
+                Image(systemName: "heart")
             }
             .popover(isPresented: $showDonatePopover, arrowEdge: .bottom) {
                 DonateQRPopoverView()

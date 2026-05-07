@@ -8,40 +8,6 @@
 
 import SwiftUI
 
-// MARK: - Custom View Modifiers for consistent styling
-
-struct CardStyle: ViewModifier {
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-
-    func body(content: Content) -> some View {
-        if #available(macOS 26.0, *),
-           SettingsVisualEffects.enableMaterials,
-           !reduceTransparency {
-            content
-                .padding()
-                .background {
-                    PHTVRoundedRect(cornerRadius: 12)
-                        .fill(.ultraThinMaterial)
-                        .settingsGlassEffect(cornerRadius: 12)
-                }
-        } else {
-            content
-                .padding()
-                .background(Color(NSColor.controlBackgroundColor))
-                .cornerRadius(8)
-        }
-    }
-}
-
-struct SectionHeaderStyle: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .font(.headline)
-            .foregroundColor(.primary)
-            .padding(.top, 8)
-    }
-}
-
 // MARK: - Shape Utilities
 
 struct PHTVRoundedRect: InsettableShape {
@@ -71,14 +37,6 @@ struct PHTVRoundedRect: InsettableShape {
 }
 
 extension View {
-    func cardStyle() -> some View {
-        modifier(CardStyle())
-    }
-    
-    func sectionHeader() -> some View {
-        modifier(SectionHeaderStyle())
-    }
-
     // Apply consistent defaults for TextField across the app
     @ViewBuilder
     func settingsTextField() -> some View {
@@ -128,58 +86,28 @@ extension View {
 // MARK: - Settings Glass Effect
 
 extension View {
-    /// Applies the native macOS 26 glass effect when the Settings visual budget allows it.
+    /// No-op retained for older subviews while Settings uses system-native chrome.
     @ViewBuilder
     func settingsGlassEffect(cornerRadius: CGFloat) -> some View {
-        if #available(macOS 26.0, *),
-           SettingsVisualEffects.enableGlassEffects {
-            self.glassEffect(
-                .regular,
-                in: .rect(corners: .fixed(cornerRadius), isUniform: true)
-            )
-        } else {
-            self
-        }
+        self
     }
 
-    /// Applies the native macOS 26 glass effect in an explicit shape.
+    /// No-op retained for older subviews while Settings uses system-native chrome.
     @ViewBuilder
     func settingsGlassEffect<S: Shape>(in shape: S) -> some View {
-        if #available(macOS 26.0, *),
-           SettingsVisualEffects.enableGlassEffects {
-            self.glassEffect(.regular, in: shape)
-        } else {
-            self
-        }
+        self
     }
 
-    /// Applies interactive native glass for custom controls when available.
+    /// No-op retained for older subviews while Settings uses system-native chrome.
     @ViewBuilder
     func settingsInteractiveGlassEffect(cornerRadius: CGFloat) -> some View {
-        if #available(macOS 26.0, *),
-           SettingsVisualEffects.enableGlassEffects {
-            self.glassEffect(
-                .regular.interactive(),
-                in: .rect(corners: .fixed(cornerRadius), isUniform: true)
-            )
-        } else {
-            self
-        }
+        self
     }
 
-    /// Applies native glass plus a semantic tint for status/accent surfaces.
+    /// No-op retained for older subviews while Settings uses system-native chrome.
     @ViewBuilder
     func settingsTintedGlassEffect(cornerRadius: CGFloat, tint: Color) -> some View {
-        if #available(macOS 26.0, *),
-           SettingsVisualEffects.enableGlassEffects {
-            self.glassEffect(
-                .regular,
-                in: .rect(corners: .fixed(cornerRadius), isUniform: true)
-            )
-            .tint(tint)
-        } else {
-            self
-        }
+        self
     }
 }
 
@@ -282,49 +210,6 @@ extension View {
     }
 }
 
-// MARK: - Settings Header Components
-
-struct SettingsStatusPill: View {
-    let text: String
-    var color: Color = .accentColor
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        Text(text)
-            .font(.caption)
-            .fontWeight(.medium)
-            .lineLimit(1)
-            .padding(.horizontal, 9)
-            .padding(.vertical, 3)
-            .background(pillBackground)
-            .overlay(pillBorder)
-            .foregroundStyle(color)
-            .accessibilityLabel(Text(text))
-    }
-
-    @ViewBuilder
-    private var pillBackground: some View {
-        Capsule()
-            .fill(pillBaseFill)
-            .overlay(
-                Capsule()
-                    .fill(color.opacity(colorScheme == .light ? 0.10 : 0.16))
-            )
-    }
-
-    private var pillBorder: some View {
-        Capsule()
-            .stroke(color.opacity(colorScheme == .light ? 0.22 : 0.32), lineWidth: 0.5)
-    }
-
-    private var pillBaseFill: Color {
-        if colorScheme == .light {
-            return Color(NSColor.controlBackgroundColor).opacity(0.9)
-        }
-        return Color(NSColor.windowBackgroundColor).opacity(0.25)
-    }
-}
-
 struct SettingsIconTile<Content: View>: View {
     let color: Color
     var size: CGFloat = 24
@@ -350,171 +235,13 @@ struct SettingsIconTile<Content: View>: View {
     }
 }
 
-struct SettingsHeaderView<Trailing: View>: View {
-    let title: String
-    let subtitle: String
-    let icon: String
-    var accent: Color = .accentColor
-    let trailing: Trailing
-    @Environment(\.colorScheme) private var colorScheme
-
-    init(
-        title: String,
-        subtitle: String,
-        icon: String,
-        accent: Color = .accentColor,
-        @ViewBuilder trailing: () -> Trailing = { EmptyView() }
-    ) {
-        self.title = title
-        self.subtitle = subtitle
-        self.icon = icon
-        self.accent = accent
-        self.trailing = trailing()
-    }
-
-    var body: some View {
-        HStack(alignment: .center, spacing: 10) {
-            iconTile
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
-
-                Text(subtitle)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            Spacer(minLength: 12)
-
-            trailing
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(SettingsSurfaceBackground(cornerRadius: SettingsLayout.cardCornerRadius, material: .thinMaterial))
-        .frame(maxWidth: SettingsLayout.contentMaxWidth, alignment: .leading)
-    }
-
-    private var iconTile: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(accent.opacity(colorScheme == .light ? 0.10 : 0.16))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .stroke(accent.opacity(colorScheme == .light ? 0.16 : 0.24), lineWidth: 0.5)
-                )
-
-            Image(systemName: icon)
-                .font(.system(size: 20, weight: .semibold))
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(accent)
-        }
-        .frame(width: 36, height: 36)
-    }
-
-}
-
-/// Native grouped surface used by Settings detail content.
-struct SettingsSurfaceBackground: View {
-    let cornerRadius: CGFloat
-    var material: Material = .regularMaterial
-
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        Group {
-            if #available(macOS 26.0, *),
-               SettingsVisualEffects.enableMaterials,
-               !reduceTransparency {
-                PHTVRoundedRect(cornerRadius: cornerRadius)
-                    .fill(material)
-                    .settingsGlassEffect(cornerRadius: cornerRadius)
-            } else {
-                PHTVRoundedRect(cornerRadius: cornerRadius)
-                    .fill(Color(NSColor.controlBackgroundColor).opacity(colorScheme == .dark ? 0.96 : 1.0))
-            }
-        }
-        .overlay(SettingsSurfaceBorder(cornerRadius: cornerRadius))
-        .shadow(
-            color: Color.black.opacity(colorScheme == .dark ? 0.18 : 0.06),
-            radius: colorScheme == .dark ? 10 : 6,
-            x: 0,
-            y: 1
-        )
-    }
-}
-
-/// Shared border style for settings cards/headers to keep thickness consistent.
-struct SettingsSurfaceBorder: View {
-    let cornerRadius: CGFloat
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        // Bevel-style border to keep header/cards visually identical across fills
-        let outer = SettingsSurfaceColors.outer(colorScheme)
-        let highlight = SettingsSurfaceColors.highlight(colorScheme)
-        let innerShadow = SettingsSurfaceColors.innerShadow(colorScheme)
-        let highlightGradient = LinearGradient(
-            colors: [highlight, Color.clear],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        let shadowGradient = LinearGradient(
-            colors: [Color.clear, innerShadow],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        return ZStack {
-            PHTVRoundedRect(cornerRadius: cornerRadius)
-                .strokeBorder(outer, lineWidth: 1)
-            PHTVRoundedRect(cornerRadius: cornerRadius)
-                .inset(by: 0.5)
-                .strokeBorder(highlightGradient, lineWidth: 0.5)
-            PHTVRoundedRect(cornerRadius: cornerRadius)
-                .inset(by: 1)
-                .strokeBorder(shadowGradient, lineWidth: 0.5)
-        }
-    }
-}
-
-/// Centralized colors so borders/dividers remain visually consistent.
-struct SettingsSurfaceColors {
-    static func outer(_ scheme: ColorScheme) -> Color {
-        Color.black.opacity(scheme == .dark ? 0.75 : 0.25)
-    }
-
-    static func highlight(_ scheme: ColorScheme) -> Color {
-        Color.white.opacity(scheme == .dark ? 0.14 : 0.6)
-    }
-
-    static func innerShadow(_ scheme: ColorScheme) -> Color {
-        Color.black.opacity(scheme == .dark ? 0.35 : 0.08)
-    }
-}
-
 // MARK: - Settings View Background
 
 /// Central toggle for heavy visual effects in Settings.
-/// Disabled to prevent large GPU/memory spikes on macOS 26 when switching tabs.
+/// Keep custom visual effects off so Settings relies on system controls and GroupBox chrome.
 enum SettingsVisualEffects {
-    static var enableGlassEffects: Bool {
-        if #available(macOS 26.0, *) {
-            return true
-        }
-        return false
-    }
-
-    static var enableMaterials: Bool {
-        if #available(macOS 26.0, *) {
-            return true
-        }
-        return false
-    }
+    static let enableGlassEffects = false
+    static let enableMaterials = false
 }
 
 /// Applies consistent background for settings views
@@ -522,13 +249,9 @@ struct SettingsViewBackground: ViewModifier {
     func body(content: Content) -> some View {
         if #available(macOS 26.0, *) {
             content
-                .scrollContentBackground(.hidden)
                 .scrollEdgeEffectStyle(.soft, for: .top)
-                .background(Color.clear.ignoresSafeArea())
         } else {
             content
-                .scrollContentBackground(.hidden)
-                .background(Color(NSColor.windowBackgroundColor).ignoresSafeArea())
         }
     }
 }
@@ -554,14 +277,10 @@ extension View {
         }
     }
 
-    /// Lets the Settings scene use the native window material instead of an opaque fill.
+    /// Retained for older call sites; Settings now uses the system scene background.
     @ViewBuilder
     func settingsNativeWindowBackground() -> some View {
-        if #available(macOS 15.0, *) {
-            self.containerBackground(.regularMaterial, for: .window)
-        } else {
-            self
-        }
+        self
     }
 
     /// Compatible foregroundStyle
@@ -578,38 +297,22 @@ extension View {
         self.foregroundStyle(.secondary)
     }
 
-    /// Groups glass elements to align Liquid Glass rendering when available.
+    /// No-op retained for older subviews while Settings uses system-native chrome.
     @ViewBuilder
     func settingsGlassContainer() -> some View {
-        if #available(macOS 26.0, *) {
-            GlassEffectContainer {
-                self
-            }
-        } else {
-            self
-        }
+        self
     }
 
-    /// Groups glass elements with custom spacing for morphing animations.
+    /// No-op retained for older subviews while Settings uses system-native chrome.
     @ViewBuilder
     func settingsGlassContainer(spacing: CGFloat) -> some View {
-        if #available(macOS 26.0, *) {
-            GlassEffectContainer(spacing: spacing) {
-                self
-            }
-        } else {
-            self
-        }
+        self
     }
 
-    /// Applies glassEffectID for morphing transitions between elements.
+    /// No-op retained for older subviews while Settings uses system-native chrome.
     @ViewBuilder
     func settingsGlassID<ID: Hashable & Sendable>(_ id: ID, in namespace: Namespace.ID) -> some View {
-        if #available(macOS 26.0, *) {
-            self.glassEffectID(id, in: namespace)
-        } else {
-            self
-        }
+        self
     }
 }
 
@@ -845,27 +548,15 @@ extension GlassSegmentedPicker where Label == Text {
 
 // MARK: - Menu Picker Style
 
-/// A view modifier that applies styled background to menu pickers
+/// No-op retained so older call sites use native menu picker styling.
 struct GlassMenuPickerStyle: ViewModifier {
-    @Environment(\.colorScheme) private var colorScheme
-
     func body(content: Content) -> some View {
         content
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background {
-                PHTVRoundedRect(cornerRadius: 8)
-                    .fill(Color(NSColor.controlBackgroundColor).opacity(colorScheme == .dark ? 0.5 : 0.6))
-                    .overlay(
-                        PHTVRoundedRect(cornerRadius: 8)
-                            .stroke(Color.primary.opacity(colorScheme == .dark ? 0.15 : 0.1), lineWidth: 1)
-                    )
-            }
     }
 }
 
 extension View {
-    /// Applies Liquid Glass styling to menu pickers
+    /// Uses native menu picker styling.
     func glassMenuPickerStyle() -> some View {
         modifier(GlassMenuPickerStyle())
     }
@@ -874,31 +565,13 @@ extension View {
 // MARK: - Search Field Style
 
 struct GlassSearchFieldStyle: ViewModifier {
-    @Environment(\.colorScheme) private var colorScheme
-    @FocusState private var isFocused: Bool
-
     func body(content: Content) -> some View {
         content
-            .textFieldStyle(.plain)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background {
-                Capsule()
-                    .fill(Color(NSColor.controlBackgroundColor).opacity(colorScheme == .dark ? 0.5 : 0.6))
-                    .overlay(
-                        Capsule()
-                            .stroke(
-                                isFocused ? Color.accentColor.opacity(0.5) : Color.primary.opacity(colorScheme == .dark ? 0.15 : 0.1),
-                                lineWidth: 1
-                            )
-                    )
-            }
-            .focused($isFocused)
     }
 }
 
 extension View {
-    /// Applies Liquid Glass styling to a search field
+    /// Uses native search field styling.
     func glassSearchFieldStyle() -> some View {
         modifier(GlassSearchFieldStyle())
     }

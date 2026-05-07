@@ -39,23 +39,6 @@ struct SystemSettingsView: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: SettingsLayout.sectionSpacing) {
-                SettingsHeaderView(
-                    title: "Hệ thống & Cập nhật",
-                    subtitle: "Quản lý giao diện, khởi động, cập nhật và sao lưu.",
-                    icon: "gearshape.fill"
-                ) {
-                    VStack(alignment: .trailing, spacing: 6) {
-                        SettingsStatusPill(
-                            text: appState.runOnStartup ? "Tự khởi động: Bật" : "Tự khởi động: Tắt",
-                            color: appState.runOnStartup ? .accentColor : .secondary
-                        )
-                        SettingsStatusPill(
-                            text: appState.showIconOnDock ? "Dock: Hiện" : "Dock: Ẩn",
-                            color: appState.showIconOnDock ? .compatTeal : .secondary
-                        )
-                    }
-                }
-
                 interfaceSection
                 menuBarSection
                 dockSection
@@ -635,17 +618,10 @@ struct SettingsButtonRow: View {
                         .frame(width: 24, height: 24)
                 }
 
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(title)
-                        .font(.body)
-                        .foregroundStyle(isDestructive ? .red : .primary)
-
-                    Text(subtitle)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                Text(title)
+                    .font(.body)
+                    .foregroundStyle(isDestructive ? .red : .primary)
+                    .lineLimit(1)
 
                 Spacer()
 

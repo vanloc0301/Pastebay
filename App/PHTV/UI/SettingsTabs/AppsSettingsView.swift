@@ -22,23 +22,6 @@ struct AppsSettingsView: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: SettingsLayout.sectionSpacing) {
-                SettingsHeaderView(
-                    title: "Ứng dụng & Tương thích",
-                    subtitle: "Quản lý chuyển đổi theo từng ứng dụng và tối ưu khả năng tương thích.",
-                    icon: "square.stack.3d.up.fill"
-                ) {
-                    VStack(alignment: .trailing, spacing: 6) {
-                        SettingsStatusPill(
-                            text: "Loại trừ: \(appState.excludedApps.count)",
-                            color: .compatTeal
-                        )
-                        SettingsStatusPill(
-                            text: appState.sendKeyStepByStep ? "Gửi theo từng phím: Bật" : "Gửi theo từng phím: Tắt",
-                            color: appState.sendKeyStepByStep ? .accentColor : .secondary
-                        )
-                    }
-                }
-
                 // Smart Switch
                 SettingsCard(
                     title: "Chuyển đổi theo ứng dụng",

@@ -12,7 +12,6 @@ enum SettingsLayout {
     static let contentMaxWidth: CGFloat = 680
     static let contentPadding: CGFloat = 16
     static let sectionSpacing: CGFloat = 16
-    static let cardCornerRadius: CGFloat = 10
     static let cardContentHorizontalPadding: CGFloat = 12
     static let cardContentVerticalPadding: CGFloat = 8
     static let rowVerticalPadding: CGFloat = 7
@@ -51,34 +50,25 @@ struct SettingsCard<Content: View, Trailing: View>: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(.headline)
-                        .foregroundStyle(.primary)
-
-                    if let subtitle {
-                        Text(subtitle)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(2)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
+        GroupBox {
+            content
+                .padding(.horizontal, SettingsLayout.cardContentHorizontalPadding)
+                .padding(.vertical, SettingsLayout.cardContentVerticalPadding)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } label: {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
 
                 Spacer(minLength: 12)
 
                 trailing
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-
-            content
-                .padding(.horizontal, SettingsLayout.cardContentHorizontalPadding)
-                .padding(.vertical, SettingsLayout.cardContentVerticalPadding)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(SettingsSurfaceBackground(cornerRadius: SettingsLayout.cardCornerRadius, material: .regularMaterial))
         }
+        .groupBoxStyle(.automatic)
         .frame(maxWidth: SettingsLayout.contentMaxWidth, alignment: .leading)
     }
 }
@@ -127,20 +117,10 @@ struct SettingsPickerRow<SelectionValue: Hashable, PickerContent: View>: View {
     }
 
     private var rowLabel: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title)
-                .font(.body)
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-
-            if let subtitle {
-                Text(subtitle)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
+        Text(title)
+            .font(.body)
+            .foregroundStyle(.primary)
+            .lineLimit(1)
     }
 }
 
@@ -174,18 +154,10 @@ struct SettingsToggleRow: View {
     }
 
     private var rowLabel: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title)
-                .font(.body)
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-
-            Text(subtitle)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-        }
+        Text(title)
+            .font(.body)
+            .foregroundStyle(.primary)
+            .lineLimit(1)
     }
 }
 
@@ -207,16 +179,10 @@ struct SettingsSelectionRow: View {
                     .frame(width: 18, height: 18)
                     .padding(.top, 1)
 
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(title)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.primary)
-
-                    Text(subtitle)
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                Text(title)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
 
                 Spacer(minLength: 0)
             }
@@ -242,7 +208,6 @@ struct SettingsDivider: View {
     var body: some View {
         Divider()
             .padding(.leading, leadingInset)
-            .opacity(0.6)
     }
 }
 
@@ -250,50 +215,38 @@ struct SettingsDivider: View {
 
 struct StatusCard: View {
     let runtimeHealth: PHTVTypingRuntimeHealthSnapshot
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        HStack(spacing: 16) {
-            ZStack {
-                Circle()
-                    .fill(statusColor.opacity(0.1))
-                    .frame(width: 48, height: 48)
-
+        GroupBox {
+            HStack(alignment: .center, spacing: 12) {
                 Image(systemName: statusIcon)
-                    .font(.system(size: 24))
+                    .font(.title2)
+                    .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(statusColor)
-            }
+                    .frame(width: 28)
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(statusTitle)
-                    .font(.headline)
-                    .foregroundStyle(.primary)
-
-                Text(statusDescription)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            if shouldShowPermissionButton {
-                Button(permissionButtonTitle) {
-                    AppDelegate.current()?.continuePermissionGuidanceIfNeeded(
-                        forceOpenSystemSettings: true
-                    )
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(statusTitle)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
                 }
-                .controlSize(.small)
-                .buttonStyle(.borderedProminent)
-                .tint(.orange)
+
+                Spacer(minLength: 12)
+
+                if shouldShowPermissionButton {
+                    Button(permissionButtonTitle) {
+                        AppDelegate.current()?.continuePermissionGuidanceIfNeeded(
+                            forceOpenSystemSettings: true
+                        )
+                    }
+                    .controlSize(.small)
+                    .buttonStyle(.borderedProminent)
+                    .tint(.orange)
+                }
             }
         }
-        .padding(14)
+        .groupBoxStyle(.automatic)
         .frame(maxWidth: SettingsLayout.contentMaxWidth)
-        .background(Color(NSColor.controlBackgroundColor), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(statusColor.opacity(colorScheme == .dark ? 0.45 : 0.28), lineWidth: 1)
-        )
     }
 
     private var statusColor: Color {
@@ -332,19 +285,6 @@ struct StatusCard: View {
             return "Đang tự khởi động lại"
         case .waitingForEventTap:
             return "Đang hoàn tất khởi tạo"
-        }
-    }
-
-    private var statusDescription: String {
-        switch runtimeHealth.phase {
-        case .ready:
-            return "PHTV đã sẵn sàng để gõ tiếng Việt."
-        case .accessibilityRequired:
-            return "PHTV chỉ cần quyền Trợ năng để hoạt động ổn định."
-        case .relaunchPending:
-            return "PHTV đang tự khởi động lại để nhận quyền Trợ năng và khôi phục bộ gõ."
-        case .waitingForEventTap:
-            return "Quyền đã được cấp, nhưng bộ gõ chưa sẵn sàng. Nhấn Thử lại ngay để PHTV tự khởi tạo lại."
         }
     }
 

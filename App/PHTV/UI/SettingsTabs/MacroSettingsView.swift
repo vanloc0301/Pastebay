@@ -52,23 +52,6 @@ struct MacroSettingsView: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: SettingsLayout.sectionSpacing) {
-                SettingsHeaderView(
-                    title: "Gõ tắt & Macro",
-                    subtitle: "Tạo từ viết tắt, quản lý danh mục và tăng tốc độ nhập liệu.",
-                    icon: "text.badge.plus"
-                ) {
-                    VStack(alignment: .trailing, spacing: 6) {
-                        SettingsStatusPill(
-                            text: appState.useMacro ? "Đang hoạt động" : "Đang tắt",
-                            color: appState.useMacro ? .accentColor : .secondary
-                        )
-                        SettingsStatusPill(
-                            text: "Tổng: \(macros.count)",
-                            color: .compatTeal
-                        )
-                    }
-                }
-
                 // Macro Configuration
                 SettingsCard(
                     title: "Thiết lập gõ tắt",

@@ -86,18 +86,16 @@ enum SettingsWindowHelper {
         window.hidesOnDeactivate = false
         window.isMovableByWindowBackground = false
         window.collectionBehavior = [.managed, .participatesInCycle, .moveToActiveSpace, .fullScreenAuxiliary]
-        configureNativeSettingsChrome(for: window)
-        window.isOpaque = false
-        window.backgroundColor = .clear
+        restoreNativeSettingsChrome(for: window)
     }
 
-    private static func configureNativeSettingsChrome(for window: NSWindow) {
-        window.styleMask.insert(.fullSizeContentView)
+    private static func restoreNativeSettingsChrome(for window: NSWindow) {
+        window.styleMask.remove(.fullSizeContentView)
         window.titleVisibility = .hidden
-        window.titlebarAppearsTransparent = true
+        window.titlebarAppearsTransparent = false
 
         if #available(macOS 11.0, *) {
-            window.toolbarStyle = .unified
+            window.toolbarStyle = .automatic
         }
     }
 

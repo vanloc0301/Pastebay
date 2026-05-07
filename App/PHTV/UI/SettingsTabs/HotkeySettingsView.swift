@@ -27,32 +27,9 @@ struct HotkeySettingsView: View {
         }
     }
 
-    private var hotkeyString: String {
-        HotkeyFormatter.switchHotkeyString(
-            control: appState.switchKeyControl,
-            option: appState.switchKeyOption,
-            shift: appState.switchKeyShift,
-            command: appState.switchKeyCommand,
-            fn: appState.switchKeyFn,
-            keyCode: appState.switchKeyCode,
-            keyName: appState.switchKeyName
-        )
-    }
-
     var body: some View {
         ScrollView {
             LazyVStack(spacing: SettingsLayout.sectionSpacing) {
-                SettingsHeaderView(
-                    title: "Phím tắt",
-                    subtitle: "Tùy chỉnh phím tắt để chuyển chế độ gõ và mở PHTV Picker nhanh.",
-                    icon: "command.circle.fill"
-                ) {
-                    SettingsStatusPill(
-                        text: "Chuyển chế độ: \(hotkeyString)",
-                        color: hotkeyString == "Chưa đặt" ? .secondary : .accentColor
-                    )
-                }
-
                 // Hotkey Configuration
                 SettingsCard(
                     title: "Chuyển chế độ gõ",
