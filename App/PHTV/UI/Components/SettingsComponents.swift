@@ -302,12 +302,17 @@ struct StatusCard: View {
 
 struct RestoreKeyButton: View {
     let key: RestoreKey
-    let isSelected: Bool
+    @Binding var selection: RestoreKey
     let themeColor: Color
-    let action: () -> Void
+
+    private var isSelected: Bool { selection == key }
 
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                selection = key
+            }
+        }) {
             HStack(spacing: 4) {
                 Text(key.symbol)
                     .font(.system(size: 14, weight: .semibold))

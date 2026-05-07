@@ -25,9 +25,11 @@ struct SettingsWindowContent: View {
         if #available(macOS 15.0, *) {
             settingsWindowContent
                 .toolbar(removing: .title)
+                .toolbar(removing: .sidebarToggle)
                 .toolbar { settingsToolbarContent }
         } else {
             settingsWindowContent
+                .toolbar(removing: .sidebarToggle)
                 .toolbar { settingsToolbarContent }
         }
     }
