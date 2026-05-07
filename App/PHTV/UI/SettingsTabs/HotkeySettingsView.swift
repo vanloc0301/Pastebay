@@ -118,7 +118,7 @@ struct HotkeySettingsView: View {
                                                 )
                                         }
                                     }
-                                    .transition(.scale.combined(with: .opacity))
+                                    
                                 }
                             }
                         }

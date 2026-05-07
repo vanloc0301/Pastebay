@@ -90,7 +90,7 @@ struct HotkeyConfigView: View {
                                 )
                         }
                     }
-                    .transition(.scale.combined(with: .opacity))
+                    
                 }
             }
 
@@ -141,7 +141,7 @@ struct HotkeyConfigView: View {
                                         .imageScale(.medium)
                                 }
                                 .buttonStyle(.plain)
-                                .transition(.scale.combined(with: .opacity))
+                                
                             }
                         }
                         .padding(.horizontal, 14)
@@ -204,7 +204,7 @@ struct HotkeyConfigView: View {
                                     .fill(Color.accentColor.opacity(0.08))
                             }
                         }
-                        .transition(.scale.combined(with: .opacity))
+                        
                     }
                 }
                 
@@ -689,7 +689,7 @@ struct PauseKeyConfigView: View {
                                 )
                         }
                     }
-                    .transition(.scale.combined(with: .opacity))
+                    
                 }
 
                 if hasPauseSwitchConflict {
@@ -727,7 +727,7 @@ struct PauseKeyConfigView: View {
                                 )
                         }
                     }
-                    .transition(.scale.combined(with: .opacity))
+                    
                 }
             }
         }
@@ -949,7 +949,7 @@ struct EmojiHotkeyConfigView: View {
                                             .imageScale(.medium)
                                     }
                                     .buttonStyle(.plain)
-                                    .transition(.scale.combined(with: .opacity))
+                                    
                                 }
                             }
                             .padding(.horizontal, 14)
@@ -1012,7 +1012,7 @@ struct EmojiHotkeyConfigView: View {
                                         .fill(Color.accentColor.opacity(0.08))
                                 }
                             }
-                            .transition(.scale.combined(with: .opacity))
+                            
                         }
                     }
 

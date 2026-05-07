@@ -267,7 +267,7 @@ struct MacroSettingsView: View {
                                         .fill(Color.accentColor)
                                 )
                                 .animation(.spring(response: 0.3, dampingFraction: 0.7), value: filteredMacros.count)
-                                .transition(.scale.combined(with: .opacity))
+                                
                         }
                         .padding(.bottom, 12)
 

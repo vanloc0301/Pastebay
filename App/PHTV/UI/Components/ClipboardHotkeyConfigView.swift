@@ -237,7 +237,7 @@ struct ClipboardHotkeyConfigView: View {
                                         .fill(Color.accentColor.opacity(0.08))
                                 }
                             }
-                            .transition(.scale.combined(with: .opacity))
+                            
                         }
                     }
                 }
