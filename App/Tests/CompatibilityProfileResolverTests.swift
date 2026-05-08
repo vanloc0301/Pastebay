@@ -18,6 +18,18 @@ final class CompatibilityProfileResolverTests: XCTestCase {
         XCTAssertFalse(profile.shouldPostToHIDTap)
     }
 
+    func testBrowserProfileForChatGPTAtlas() {
+        for bundleId in ["com.openai.atlas", "com.openai.atlas.beta", "com.openai.atlas.app.Profile"] {
+            let profile = PHTVCompatibilityProfileResolver.resolve(forBundleId: bundleId)
+
+            XCTAssertEqual(profile.kind, .browser, bundleId)
+            XCTAssertTrue(profile.isBrowser, bundleId)
+            XCTAssertTrue(profile.containsUnicodeCompound, bundleId)
+            XCTAssertTrue(profile.supportsNativeSystemTextReplacements, bundleId)
+            XCTAssertFalse(profile.shouldPostToHIDTap, bundleId)
+        }
+    }
+
     func testEditorProfileForVSCode() {
         let profile = PHTVCompatibilityProfileResolver.resolve(forBundleId: "com.microsoft.VSCode")
 

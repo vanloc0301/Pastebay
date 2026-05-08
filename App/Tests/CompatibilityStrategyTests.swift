@@ -62,6 +62,28 @@ final class CompatibilityStrategyTests: XCTestCase {
         XCTAssertFalse(PHTVAppDetectionService.needsStrictAddressBarDetection("com.google.Chrome"))
     }
 
+    func testAtlasUsesStandardBrowserAccentCorrectionPath() {
+        let bundleId = "com.openai.atlas"
+        let plan = PHTVInputStrategyService.processSignalPlan(
+            forBundleId: bundleId,
+            keyCode: Int32(KeyCode.eKey),
+            spaceKeyCode: Int32(KeyCode.space),
+            slashKeyCode: Int32(KeyCode.slash),
+            extCode: 0,
+            backspaceCount: 2,
+            newCharCount: 1,
+            isBrowserApp: PHTVAppDetectionService.isBrowserApp(bundleId),
+            isSpotlightTarget: false,
+            needsPrecomposedBatched: PHTVAppDetectionService.needsPrecomposedBatched(bundleId),
+            browserFixEnabled: true
+        )
+
+        XCTAssertTrue(PHTVAppDetectionService.containsUnicodeCompound(bundleId))
+        XCTAssertTrue(plan.isBrowserFix)
+        XCTAssertTrue(plan.shouldTryBrowserAddressBarFix)
+        XCTAssertFalse(plan.shouldTryLegacyNonBrowserFix)
+    }
+
     func testStrictAddressBarDetectionRejectsGenericTextFieldOutsideWebArea() {
         XCTAssertFalse(
             PHTVAccessibilityService.addressBarClassification(
