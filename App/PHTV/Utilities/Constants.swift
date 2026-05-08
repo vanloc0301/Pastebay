@@ -399,6 +399,7 @@ enum Defaults {
     static let checkSpelling = true
     static let useModernOrthography = true
     static let quickTelex = false
+    static let fixRecommendBrowser = true
     static let sendKeyStepByStep = false
     static let useMacro = true
     static let useMacroInEnglishMode = false
@@ -410,7 +411,7 @@ enum Defaults {
     static let quickStartConsonant = false
     static let quickEndConsonant = false
     static let rememberCode = true
-    static let autoRestoreEnglishWord = false
+    static let autoRestoreEnglishWord = true
     static let autoRestoreEnglishWordMode = AutoRestoreEnglishMode.englishOnly
     static let restoreIfWrongSpelling = false
 

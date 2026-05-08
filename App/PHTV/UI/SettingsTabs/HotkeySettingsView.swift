@@ -59,19 +59,15 @@ struct HotkeySettingsView: View {
 
                             VStack(alignment: .leading, spacing: 8) {
                                 // Grid of restore keys (3 columns, 3 keys total)
-                                LazyVGrid(columns: [
-                                    GridItem(.flexible(), spacing: 10),
-                                    GridItem(.flexible(), spacing: 10),
-                                    GridItem(.flexible(), spacing: 10)
-                                ], spacing: 10) {
+                                Picker("", selection: bindable.restoreKey) {
                                     ForEach(RestoreKey.allCases) { key in
-                                        RestoreKeyButton(
-                                            key: key,
-                                            selection: bindable.restoreKey,
-                                            themeColor: .accentColor
-                                        )
+                                        Text(key == .esc ? key.symbol : "\(key.symbol) \(key.displayName)")
+                                            .tag(key)
                                     }
                                 }
+                                .pickerStyle(.segmented)
+                                .labelsHidden()
+                                .frame(maxWidth: .infinity)
 
                                 // Conflict warning
                                 if hasRestoreHotkeyConflict {

@@ -31,12 +31,12 @@ private final class RuntimeSettingsStateBox: @unchecked Sendable {
     var codeTable: Int32 = 0
     var language: Int32 = 1
     var switchKeyStatus: Int32 = Int32(Defaults.defaultSwitchKeyStatus)
-    var fixRecommendBrowser: Int32 = 1
+    var fixRecommendBrowser: Int32 = Defaults.fixRecommendBrowser ? 1 : 0
     var useMacro: Int32 = 1
     var useMacroInEnglishMode: Int32 = 0
     var useSmartSwitchKey: Int32 = 1
     var autoCapsMacro: Int32 = 0
-    var checkSpelling: Int32 = 1
+    var checkSpelling: Int32 = Defaults.checkSpelling ? 1 : 0
     var useModernOrthography: Int32 = 1
     var quickTelex: Int32 = 0
     var freeMark: Int32 = 0
@@ -50,7 +50,7 @@ private final class RuntimeSettingsStateBox: @unchecked Sendable {
     var tempOffSpelling: Int32 = 0
     var tempOffEngine: Int32 = 0
     var restoreOnEscape: Int32 = 1
-    var autoRestoreEnglishWord: Int32 = 1
+    var autoRestoreEnglishWord: Int32 = Defaults.autoRestoreEnglishWord ? 1 : 0
     var autoRestoreEnglishWordMode: Int32 = Int32(Defaults.autoRestoreEnglishWordMode.rawValue)
     var restoreIfWrongSpelling: Int32 = Defaults.restoreIfWrongSpelling ? 1 : 0
     var customEscapeKey: Int32 = 0

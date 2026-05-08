@@ -76,9 +76,8 @@ struct SettingsView: View {
     }
 
     private var settingsSplitView: some View {
-        NavigationSplitView(columnVisibility: .constant(.all)) {
+        NavigationSplitView {
             sidebarView
-                .toolbar(removing: .sidebarToggle)
         } detail: {
             ZStack {
                 settingsDetailExtensionBackground
@@ -93,7 +92,6 @@ struct SettingsView: View {
         }
         .conditionalSearchable(text: $searchText, prompt: "Tìm nhanh cài đặt…")
         .settingsSearchToolbarBehavior()
-        .toolbar(removing: .sidebarToggle)
         .navigationSplitViewStyle(.balanced)
     }
 
@@ -139,7 +137,11 @@ struct SettingsView: View {
             }
         }
         .listStyle(.sidebar)
-        .navigationSplitViewColumnWidth(240)
+        .navigationSplitViewColumnWidth(
+            min: SettingsLayout.sidebarMinWidth,
+            ideal: SettingsLayout.sidebarIdealWidth,
+            max: SettingsLayout.sidebarMaxWidth
+        )
         .animation(nil, value: selectedTab)
 
         if #available(macOS 26.0, *) {

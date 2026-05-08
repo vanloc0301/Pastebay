@@ -42,7 +42,7 @@ final class InputMethodState {
     }
 
     // Features
-    var checkSpelling: Bool = true {
+    var checkSpelling: Bool = Defaults.checkSpelling {
         didSet { handleRuntimeSettingDidChange(oldValue: oldValue, newValue: checkSpelling) }
     }
     var useModernOrthography: Bool = true {
@@ -83,8 +83,9 @@ final class InputMethodState {
         didSet { handleRuntimeSettingDidChange(oldValue: oldValue, newValue: rememberCode) }
     }
 
-    // Auto restore English words - default: ON for new users
-    var autoRestoreEnglishWord: Bool = true {
+    // Auto restore English words - default: ON, but runtime only restores
+    // after Vietnamese handling has had priority.
+    var autoRestoreEnglishWord: Bool = Defaults.autoRestoreEnglishWord {
         didSet {
             handleObservedChange(oldValue: oldValue, newValue: autoRestoreEnglishWord) {
                 self.handleAutoRestoreEnglishSettingsDidChange()

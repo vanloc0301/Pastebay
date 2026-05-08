@@ -24,8 +24,8 @@ final class SparklePreferencesEnforcementTests: XCTestCase {
 
         XCTAssertNil(defaults.object(forKey: UserDefaultsKey.sparkleBetaChannel))
         XCTAssertNil(defaults.object(forKey: UserDefaultsKey.legacyAutoInstallUpdates))
-        XCTAssertTrue(defaults.bool(forKey: UserDefaultsKey.automaticUpdateChecks, default: false))
-        XCTAssertTrue(defaults.bool(forKey: UserDefaultsKey.autoInstallUpdates, default: false))
+        XCTAssertFalse(defaults.bool(forKey: UserDefaultsKey.automaticUpdateChecks, default: true))
+        XCTAssertFalse(defaults.bool(forKey: UserDefaultsKey.autoInstallUpdates, default: true))
         XCTAssertFalse(defaults.requiresStableUpdateChannelEnforcement())
     }
 
@@ -40,24 +40,18 @@ final class SparklePreferencesEnforcementTests: XCTestCase {
         XCTAssertFalse(defaults.enforceStableUpdateChannel())
     }
 
-    func testMissingSparklePreferencesArePersistedAsEnabled() {
+    func testMissingSparklePreferencesUseImplicitDefaultsWithoutPersisting() {
         let (defaults, suiteName) = makeIsolatedDefaults()
         defer { clear(defaults: defaults, suiteName: suiteName) }
 
         XCTAssertNil(defaults.persistentDomain(forName: suiteName)?[UserDefaultsKey.automaticUpdateChecks])
         XCTAssertNil(defaults.persistentDomain(forName: suiteName)?[UserDefaultsKey.autoInstallUpdates])
 
-        _ = defaults.enforceStableUpdateChannel()
-        XCTAssertTrue(defaults.bool(forKey: UserDefaultsKey.automaticUpdateChecks, default: false))
-        XCTAssertTrue(defaults.bool(forKey: UserDefaultsKey.autoInstallUpdates, default: false))
-        XCTAssertEqual(
-            (defaults.persistentDomain(forName: suiteName)?[UserDefaultsKey.automaticUpdateChecks] as? NSNumber)?.boolValue,
-            true
-        )
-        XCTAssertEqual(
-            (defaults.persistentDomain(forName: suiteName)?[UserDefaultsKey.autoInstallUpdates] as? NSNumber)?.boolValue,
-            true
-        )
+        XCTAssertFalse(defaults.enforceStableUpdateChannel())
+        XCTAssertTrue(defaults.bool(forKey: UserDefaultsKey.automaticUpdateChecks, default: true))
+        XCTAssertTrue(defaults.bool(forKey: UserDefaultsKey.autoInstallUpdates, default: true))
+        XCTAssertNil(defaults.persistentDomain(forName: suiteName)?[UserDefaultsKey.automaticUpdateChecks])
+        XCTAssertNil(defaults.persistentDomain(forName: suiteName)?[UserDefaultsKey.autoInstallUpdates])
         XCTAssertFalse(defaults.requiresStableUpdateChannelEnforcement())
     }
 

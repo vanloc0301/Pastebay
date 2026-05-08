@@ -248,7 +248,7 @@ import Foundation
         let checkSpelling = phtv_readIntWithFallback(
             defaults: defaults,
             key: UserDefaultsKey.spelling,
-            fallback: Int32(PHTVEngineRuntimeFacade.checkSpelling())
+            fallback: Defaults.checkSpelling ? 1 : 0
         )
         PHTVEngineRuntimeFacade.setCheckSpelling(checkSpelling)
 
@@ -467,8 +467,8 @@ import Foundation
         PHTVEngineRuntimeFacade.setFreeMark(0)
         defaults.set(0, forKey: UserDefaultsKey.freeMark)
 
-        PHTVEngineRuntimeFacade.setCheckSpelling(1)
-        defaults.set(1, forKey: UserDefaultsKey.spelling)
+        PHTVEngineRuntimeFacade.setCheckSpelling(Defaults.checkSpelling ? 1 : 0)
+        defaults.set(Defaults.checkSpelling ? 1 : 0, forKey: UserDefaultsKey.spelling)
 
         PHTVEngineRuntimeFacade.setCurrentCodeTable(0)
         defaults.set(0, forKey: UserDefaultsKey.codeTable)
@@ -483,8 +483,8 @@ import Foundation
         PHTVEngineRuntimeFacade.setUseModernOrthography(1)
         defaults.set(1, forKey: UserDefaultsKey.modernOrthography)
 
-        PHTVEngineRuntimeFacade.setFixRecommendBrowser(1)
-        defaults.set(1, forKey: UserDefaultsKey.fixRecommendBrowser)
+        PHTVEngineRuntimeFacade.setFixRecommendBrowser(Defaults.fixRecommendBrowser ? 1 : 0)
+        defaults.set(Defaults.fixRecommendBrowser ? 1 : 0, forKey: UserDefaultsKey.fixRecommendBrowser)
 
         PHTVEngineRuntimeFacade.setUseMacro(1)
         defaults.set(1, forKey: UserDefaultsKey.useMacro)
@@ -522,8 +522,9 @@ import Foundation
         PHTVEngineRuntimeFacade.setTempOffEngine(0)
         defaults.set(0, forKey: UserDefaultsKey.tempOffPHTV)
 
-        PHTVEngineRuntimeFacade.setAutoRestoreEnglishWord(1)
-        defaults.set(1, forKey: UserDefaultsKey.autoRestoreEnglishWord)
+        let autoRestore = Defaults.autoRestoreEnglishWord ? 1 : 0
+        PHTVEngineRuntimeFacade.setAutoRestoreEnglishWord(Int32(autoRestore))
+        defaults.set(autoRestore, forKey: UserDefaultsKey.autoRestoreEnglishWord)
         PHTVEngineRuntimeFacade.setAutoRestoreEnglishWordMode(Int32(Defaults.autoRestoreEnglishWordMode.rawValue))
         defaults.set(Defaults.autoRestoreEnglishWordMode.rawValue, forKey: UserDefaultsKey.autoRestoreEnglishWordMode)
         let restoreIfWrongSpelling = Defaults.restoreIfWrongSpelling ? 1 : 0
