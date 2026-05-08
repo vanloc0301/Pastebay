@@ -14,6 +14,7 @@ enum SettingsLayout {
     static let sectionSpacing: CGFloat = 16
     static let cardContentHorizontalPadding: CGFloat = 12
     static let cardContentVerticalPadding: CGFloat = 8
+    static let cardCornerRadius: CGFloat = 12
     static let rowVerticalPadding: CGFloat = 7
     static let rowControlColumnWidth: CGFloat = 168
     static let toggleControlWidth: CGFloat = 54
@@ -34,6 +35,7 @@ struct SettingsCard<Content: View, Trailing: View>: View {
     let subtitle: String?
     let trailing: Trailing
     let content: Content
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     init(
         title: String,
@@ -50,26 +52,57 @@ struct SettingsCard<Content: View, Trailing: View>: View {
     }
 
     var body: some View {
-        GroupBox {
+        VStack(alignment: .leading, spacing: 8) {
+            cardHeader
+
             content
                 .padding(.horizontal, SettingsLayout.cardContentHorizontalPadding)
                 .padding(.vertical, SettingsLayout.cardContentVerticalPadding)
                 .frame(maxWidth: .infinity, alignment: .leading)
-        } label: {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(title)
-                    .font(.headline)
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-
-                Spacer(minLength: 12)
-
-                trailing
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+                .settingsCardGlassSurface(reduceTransparency: reduceTransparency)
         }
-        .groupBoxStyle(.automatic)
         .frame(maxWidth: SettingsLayout.contentMaxWidth, alignment: .leading)
+    }
+
+    private var cardHeader: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(title)
+                .font(.headline)
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+
+            Spacer(minLength: 12)
+
+            trailing
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 2)
+    }
+}
+
+private struct SettingsCardGlassSurface: ViewModifier {
+    let reduceTransparency: Bool
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if #available(macOS 26.0, *),
+           SettingsVisualEffects.enableGlassEffects,
+           !reduceTransparency {
+            content
+                .glassEffect(.regular, in: .rect(cornerRadius: SettingsLayout.cardCornerRadius))
+        } else {
+            content
+                .background {
+                    PHTVRoundedRect(cornerRadius: SettingsLayout.cardCornerRadius)
+                        .fill(Color(NSColor.controlBackgroundColor))
+                }
+        }
+    }
+}
+
+private extension View {
+    func settingsCardGlassSurface(reduceTransparency: Bool) -> some View {
+        modifier(SettingsCardGlassSurface(reduceTransparency: reduceTransparency))
     }
 }
 
@@ -208,37 +241,38 @@ struct SettingsDivider: View {
 
 struct StatusCard: View {
     let runtimeHealth: PHTVTypingRuntimeHealthSnapshot
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     var body: some View {
-        GroupBox {
-            HStack(alignment: .center, spacing: 12) {
-                Image(systemName: statusIcon)
-                    .font(.title2)
-                    .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(statusColor)
-                    .frame(width: 28)
+        HStack(alignment: .center, spacing: 12) {
+            Image(systemName: statusIcon)
+                .font(.title2)
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(statusColor)
+                .frame(width: 28)
 
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(statusTitle)
-                        .font(.headline)
-                        .foregroundStyle(.primary)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(statusTitle)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+            }
+
+            Spacer(minLength: 12)
+
+            if shouldShowPermissionButton {
+                Button(permissionButtonTitle) {
+                    AppDelegate.current()?.continuePermissionGuidanceIfNeeded(
+                        forceOpenSystemSettings: true
+                    )
                 }
-
-                Spacer(minLength: 12)
-
-                if shouldShowPermissionButton {
-                    Button(permissionButtonTitle) {
-                        AppDelegate.current()?.continuePermissionGuidanceIfNeeded(
-                            forceOpenSystemSettings: true
-                        )
-                    }
-                    .controlSize(.small)
-                    .adaptiveProminentButtonStyle()
-                    .tint(.orange)
-                }
+                .controlSize(.small)
+                .adaptiveProminentButtonStyle()
+                .tint(.orange)
             }
         }
-        .groupBoxStyle(.automatic)
+        .padding(.horizontal, SettingsLayout.cardContentHorizontalPadding)
+        .padding(.vertical, SettingsLayout.cardContentVerticalPadding)
+        .settingsCardGlassSurface(reduceTransparency: reduceTransparency)
         .frame(maxWidth: SettingsLayout.contentMaxWidth)
     }
 

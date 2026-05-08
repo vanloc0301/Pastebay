@@ -98,7 +98,12 @@ struct UpdateBannerView: View {
     @ViewBuilder
     private var bannerBackground: some View {
         let fallback = Color(NSColor.controlBackgroundColor).opacity(colorScheme == .light ? 0.92 : 0.6)
-        if SettingsVisualEffects.enableMaterials, !reduceTransparency {
+        if #available(macOS 26.0, *),
+           SettingsVisualEffects.enableGlassEffects,
+           !reduceTransparency {
+            Color.clear
+                .glassEffect(.regular, in: .rect(cornerRadius: SettingsLayout.cardCornerRadius))
+        } else if SettingsVisualEffects.enableMaterials, !reduceTransparency {
             Rectangle()
                 .fill(.regularMaterial)
         } else {

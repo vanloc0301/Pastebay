@@ -68,44 +68,41 @@ extension View {
 // MARK: - Settings Glass Effect
 
 extension View {
-    /// Uses the system's default Liquid Glass shape on macOS 26. The corner
-    /// parameter is retained for older call sites, but Settings no longer
-    /// forces custom radii for Liquid Glass.
+    /// Applies Liquid Glass with the shape requested by older call sites.
     @ViewBuilder
     func settingsGlassEffect(cornerRadius: CGFloat) -> some View {
         if #available(macOS 26.0, *) {
-            self.glassEffect()
+            self.glassEffect(.regular, in: PHTVRoundedRect(cornerRadius: cornerRadius))
         } else {
             self
         }
     }
 
-    /// Uses the system's default Liquid Glass effect. Shape-specialized call
-    /// sites are intentionally normalized to the default native shape.
+    /// Applies Liquid Glass while preserving the caller's shape.
     @ViewBuilder
     func settingsGlassEffect<S: Shape>(in shape: S) -> some View {
         if #available(macOS 26.0, *) {
-            self.glassEffect()
+            self.glassEffect(.regular, in: shape)
         } else {
             self
         }
     }
 
-    /// Uses interactive Liquid Glass with the default system shape.
+    /// Uses interactive Liquid Glass with the requested card shape.
     @ViewBuilder
     func settingsInteractiveGlassEffect(cornerRadius: CGFloat) -> some View {
         if #available(macOS 26.0, *) {
-            self.glassEffect(.regular.interactive())
+            self.glassEffect(.regular.interactive(), in: PHTVRoundedRect(cornerRadius: cornerRadius))
         } else {
             self
         }
     }
 
-    /// Uses tinted Liquid Glass with the default system shape.
+    /// Uses tinted Liquid Glass with the requested card shape.
     @ViewBuilder
     func settingsTintedGlassEffect(cornerRadius: CGFloat, tint: Color) -> some View {
         if #available(macOS 26.0, *) {
-            self.glassEffect(.regular.tint(tint))
+            self.glassEffect(.regular.tint(tint), in: PHTVRoundedRect(cornerRadius: cornerRadius))
         } else {
             self
         }
@@ -259,18 +256,28 @@ struct SettingsIconTile<Content: View>: View {
 // MARK: - Settings View Background
 
 /// Central toggle for heavy visual effects in Settings.
-/// Keep custom visual effects off so Settings relies on system controls and GroupBox chrome.
+/// Keep effects scoped to app-specific surfaces; system sidebar, toolbar, and search remain native.
 enum SettingsVisualEffects {
-    static let enableGlassEffects = false
+    static let enableGlassEffects = true
     static let enableMaterials = false
 }
 
 /// Applies consistent background for settings views
 struct SettingsViewBackground: ViewModifier {
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    @ViewBuilder
     func body(content: Content) -> some View {
         if #available(macOS 26.0, *) {
-            content
-                .scrollEdgeEffectStyle(.soft, for: .top)
+            if SettingsVisualEffects.enableGlassEffects, !reduceTransparency {
+                GlassEffectContainer(spacing: SettingsLayout.sectionSpacing) {
+                    content
+                        .scrollEdgeEffectStyle(.soft, for: .top)
+                }
+            } else {
+                content
+                    .scrollEdgeEffectStyle(.soft, for: .top)
+            }
         } else {
             content
         }

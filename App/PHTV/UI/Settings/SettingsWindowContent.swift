@@ -25,11 +25,9 @@ struct SettingsWindowContent: View {
         if #available(macOS 15.0, *) {
             settingsWindowContent
                 .toolbar(removing: .title)
-                .toolbar(removing: .sidebarToggle)
                 .toolbar { settingsToolbarContent }
         } else {
             settingsWindowContent
-                .toolbar(removing: .sidebarToggle)
                 .toolbar { settingsToolbarContent }
         }
     }
@@ -111,31 +109,54 @@ struct SettingsWindowContent: View {
 
     @ToolbarContentBuilder
     private var settingsToolbarContent: some ToolbarContent {
-        ToolbarItemGroup(placement: .primaryAction) {
-            Button {
-                appState.settingsWindowAlwaysOnTop.toggle()
-            } label: {
-                Image(systemName: appState.settingsWindowAlwaysOnTop ? "pin.fill" : "pin")
+        if #available(macOS 26.0, *) {
+            ToolbarItem(placement: .primaryAction) {
+                pinToolbarButton
             }
-            .help(appState.settingsWindowAlwaysOnTop ? "Bỏ ghim cửa sổ Cài đặt" : "Ghim cửa sổ Cài đặt")
 
-            Button {
-                NotificationCenter.default.post(name: NotificationName.sparkleManualCheck, object: nil)
-            } label: {
-                Image(systemName: "arrow.clockwise")
-            }
-            .help("Kiểm tra cập nhật")
+            ToolbarSpacer(.fixed, placement: .primaryAction)
 
-            Button {
-                showDonatePopover.toggle()
-            } label: {
-                Image(systemName: "heart")
+            ToolbarItemGroup(placement: .primaryAction) {
+                updateToolbarButton
+                donateToolbarButton
             }
-            .popover(isPresented: $showDonatePopover, arrowEdge: .bottom) {
-                DonateQRPopoverView()
+        } else {
+            ToolbarItemGroup(placement: .primaryAction) {
+                pinToolbarButton
+                updateToolbarButton
+                donateToolbarButton
             }
-            .help("Ủng hộ phát triển")
         }
+    }
+
+    private var pinToolbarButton: some View {
+        Button {
+            appState.settingsWindowAlwaysOnTop.toggle()
+        } label: {
+            Image(systemName: appState.settingsWindowAlwaysOnTop ? "pin.fill" : "pin")
+        }
+        .help(appState.settingsWindowAlwaysOnTop ? "Bỏ ghim cửa sổ Cài đặt" : "Ghim cửa sổ Cài đặt")
+    }
+
+    private var updateToolbarButton: some View {
+        Button {
+            NotificationCenter.default.post(name: NotificationName.sparkleManualCheck, object: nil)
+        } label: {
+            Image(systemName: "arrow.clockwise")
+        }
+        .help("Kiểm tra cập nhật")
+    }
+
+    private var donateToolbarButton: some View {
+        Button {
+            showDonatePopover.toggle()
+        } label: {
+            Image(systemName: "heart")
+        }
+        .popover(isPresented: $showDonatePopover, arrowEdge: .bottom) {
+            DonateQRPopoverView()
+        }
+        .help("Ủng hộ phát triển")
     }
 
     /// Setup observer to ensure settings window stays visible when app loses focus
