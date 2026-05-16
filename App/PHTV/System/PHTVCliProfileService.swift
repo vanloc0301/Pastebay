@@ -37,7 +37,7 @@ final class PHTVCliProfileService: NSObject {
 
     private static let profileByCode: [Int32: TimingProfile] = [
         1: TimingProfile(backspaceDelayUs: 8_000, waitAfterBackspaceUs: 25_000, textDelayUs: 8_000, textChunkSize: 1),  // IDE
-        2: TimingProfile(backspaceDelayUs: 6_000, waitAfterBackspaceUs: 18_000, textDelayUs: 6_000, textChunkSize: 1),  // Fast terminal
+        2: TimingProfile(backspaceDelayUs: 8_000, waitAfterBackspaceUs: 25_000, textDelayUs: 8_000, textChunkSize: 1),  // Fast terminal
         3: TimingProfile(backspaceDelayUs: 12_000, waitAfterBackspaceUs: 42_000, textDelayUs: 12_000, textChunkSize: 1), // Medium terminal (e.g. Apple Terminal)
         4: TimingProfile(backspaceDelayUs: 15_000, waitAfterBackspaceUs: 50_000, textDelayUs: 15_000, textChunkSize: 1), // Slow terminal
         5: TimingProfile(backspaceDelayUs: 15_000, waitAfterBackspaceUs: 48_000, textDelayUs: 12_000, textChunkSize: 1), // Claude Code session
@@ -277,9 +277,9 @@ final class PHTVCliRuntimeStateService: NSObject {
         let speedFactor = state.runtimeCliSpeedFactor
         state.lock.unlock()
 
-        let settleDelayUs = PHTVTimingService.scaleDelayMicroseconds(
-            baseDelayUs,
-            factor: speedFactor
+        let settleDelayUs = max(
+            UInt64(PHTVCliProfileService.minimumPostSendBlockUsValue),
+            PHTVTimingService.scaleDelayMicroseconds(baseDelayUs, factor: speedFactor)
         )
         scheduleBlock(forMicroseconds: settleDelayUs, nowMachTime: now)
     }

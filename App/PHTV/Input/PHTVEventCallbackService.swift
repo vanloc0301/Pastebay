@@ -261,6 +261,12 @@ final class PHTVEventCallbackService {
             return Unmanaged.passRetained(event)
         }
 
+        // Skip events injected by PHTV itself before CLI stabilization. Synthetic
+        // events must not be delayed by the guard that protects real user input.
+        if event.getIntegerValueField(.eventSourceUserData) == EventSourceMarker.phtv {
+            return Unmanaged.passRetained(event)
+        }
+
         // CLI stabilization: block briefly after synthetic injection to avoid interleaving
         if type == .keyDown {
             let remainUs = PHTVCliRuntimeStateService.remainingBlockMicroseconds(
@@ -279,11 +285,6 @@ final class PHTVEventCallbackService {
         // Perform periodic health check and recovery.
         let tapHealthOk = PHTVEventTapHealthService.checkAndRecover(forEventType: type)
         _ = tapHealthOk
-
-        // Skip events injected by PHTV itself (marker-based)
-        if event.getIntegerValueField(.eventSourceUserData) == EventSourceMarker.phtv {
-            return Unmanaged.passRetained(event)
-        }
 
         PHTVEventRuntimeContextService.clearCliPostFlags()
         var eventFlags = event.flags
