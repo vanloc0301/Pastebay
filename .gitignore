@@ -25,6 +25,7 @@ xcuserdata/
 .build/
 Packages/
 Package.resolved
+SourcePackages/
 
 # Certificates
 *.p12
