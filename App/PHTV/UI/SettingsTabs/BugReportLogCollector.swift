@@ -172,6 +172,7 @@ enum BugReportLogCollector {
             "[PHTV", "PHTV]", "[phtv",
             "[Permission]", "[Accessibility]",
             "[SettingsView]", "[InputMethod]",
+            "[EventTap]", "[HotkeyHealth]",
             "[Telex]", "[VNI]", "[Vietnamese]",
             "[Macro]", "[Backend]", "[Sync]",
             "PHTV Live", "PHTV_LIVE",

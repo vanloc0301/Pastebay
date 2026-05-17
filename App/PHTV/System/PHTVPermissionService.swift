@@ -167,6 +167,17 @@ import Foundation
                 continue
             }
 
+            // Verify that the created tap is actually enabled!
+            // In corrupt/stale TCC permission states, macOS may return a non-nil port that remains disabled.
+            CGEvent.tapEnable(tap: testTap, enable: true)
+            guard CGEvent.tapIsEnabled(tap: testTap) else {
+                CFMachPortInvalidate(testTap)
+                if attempt < maxTestTapRetries - 1 {
+                    usleep(testTapRetryDelayUsec)
+                }
+                continue
+            }
+
             CFMachPortInvalidate(testTap)
 #if DEBUG
             if attempt > 0 {
