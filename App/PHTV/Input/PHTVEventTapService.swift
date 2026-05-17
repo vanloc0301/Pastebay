@@ -7,6 +7,7 @@
 //  Copyright © 2026 Phạm Hùng Tiến. All rights reserved.
 //
 
+import AppKit
 import ApplicationServices
 import Foundation
 
@@ -16,6 +17,8 @@ import Foundation
         var permissionLost = false
         var eventTap: CFMachPort?
         var runLoopSource: CFRunLoopSource?
+        var mouseClickMonitor: Any?
+        var usedFallbackKeyboardOnlyMask = false
         var tapReenableCount: UInt = 0
         var tapRecreateCount: UInt = 0
     }
@@ -126,25 +129,48 @@ import Foundation
 
         PHTVEngineSessionService.boot()
 
-        let mask = eventMaskBit(.keyDown)
+        let fullMask = eventMaskBit(.keyDown)
             | eventMaskBit(.keyUp)
             | eventMaskBit(.flagsChanged)
             | eventMaskBit(.leftMouseDown)
             | eventMaskBit(.rightMouseDown)
 
+        let keyboardOnlyMask = eventMaskBit(.keyDown)
+            | eventMaskBit(.keyUp)
+            | eventMaskBit(.flagsChanged)
+
         let callback: CGEventTapCallBack = { proxy, type, event, refcon in
             return PHTVEventCallbackService.handle(proxy: proxy, type: type, event: event, refcon: refcon)
         }
 
-        guard let tap = CGEvent.tapCreate(
+        // Try full mask (keyboard + mouse) first
+        NSLog("[EventTap] Attempting tap creation with full mask (keyboard + mouse)...")
+        var tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
             place: .headInsertEventTap,
             options: .defaultTap,
-            eventsOfInterest: mask,
+            eventsOfInterest: fullMask,
             callback: callback,
             userInfo: nil
-        ) else {
-            fputs("Failed to create session event tap\n", stderr)
+        )
+        var usedFallback = false
+
+        // Fallback: keyboard-only mask if full mask fails
+        if tap == nil {
+            NSLog("[EventTap] ⚠️ Full mask failed — falling back to keyboard-only mask")
+            tap = CGEvent.tapCreate(
+                tap: .cgSessionEventTap,
+                place: .headInsertEventTap,
+                options: .defaultTap,
+                eventsOfInterest: keyboardOnlyMask,
+                callback: callback,
+                userInfo: nil
+            )
+            usedFallback = true
+        }
+
+        guard let tap else {
+            NSLog("[EventTap] ❌ Both full and keyboard-only tap creation FAILED")
             publishTypingReadiness(false)
             return false
         }
@@ -153,6 +179,7 @@ import Foundation
         runtimeState.withLock { state in
             state.eventTap = tap
             state.runLoopSource = source
+            state.usedFallbackKeyboardOnlyMask = usedFallback
             state.isInited = true
         }
 
@@ -161,8 +188,15 @@ import Foundation
         }
 
         CGEvent.tapEnable(tap: tap, enable: true)
-        NSLog("[EventTap] Enabled and added to main run loop")
         let isReady = CGEvent.tapIsEnabled(tap: tap)
+
+        if usedFallback {
+            NSLog("[EventTap] ✅ Keyboard-only tap enabled — installing NSEvent mouse monitor")
+            installMouseClickMonitor()
+        } else {
+            NSLog("[EventTap] ✅ Full tap enabled (keyboard + mouse) on main run loop")
+        }
+
         publishTypingReadiness(isReady)
         return isReady
     }
@@ -178,10 +212,13 @@ import Foundation
             state.eventTap = nil
             state.isInited = false
             state.permissionLost = false
+            state.usedFallbackKeyboardOnlyMask = false
             return (true, tap, source)
         }
         if didStop {
             NSLog("[EventTap] Stopping...")
+
+            removeMouseClickMonitor()
 
             if let tap {
                 CGEvent.tapEnable(tap: tap, enable: false)
@@ -202,6 +239,33 @@ import Foundation
             publishTypingReadiness(false)
         }
         return true
+    }
+
+    // MARK: - NSEvent Mouse Click Monitor (Fallback)
+
+    private static func installMouseClickMonitor() {
+        removeMouseClickMonitor()
+        let monitor = NSEvent.addGlobalMonitorForEvents(
+            matching: [.leftMouseDown, .rightMouseDown]
+        ) { _ in
+            PHTVEngineSessionService.requestNewSessionInternal(allowUppercasePrime: true)
+        }
+        runtimeState.withLock { state in
+            state.mouseClickMonitor = monitor
+        }
+        NSLog("[EventTap] NSEvent mouse click monitor installed")
+    }
+
+    private static func removeMouseClickMonitor() {
+        let monitor = runtimeState.withLock { state -> Any? in
+            let m = state.mouseClickMonitor
+            state.mouseClickMonitor = nil
+            return m
+        }
+        if let monitor {
+            NSEvent.removeMonitor(monitor)
+            NSLog("[EventTap] NSEvent mouse click monitor removed")
+        }
     }
 
     @objc static func handleEventTapDisabled(_ type: CGEventType) {
