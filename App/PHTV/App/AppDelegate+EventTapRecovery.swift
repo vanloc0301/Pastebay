@@ -8,6 +8,7 @@
 //
 
 import AppKit
+import ApplicationServices
 import Foundation
 
 private let phtvEventTapRecoveryDelays: [TimeInterval] = [0.0, 0.25, 0.75, 1.5, 3.0]
@@ -181,9 +182,9 @@ private func phtvEmojiHotkeyLooksValid(enabled: Int32, modifiers: Int32, keyCode
             return
         }
 
-        guard PHTVManager.canCreateEventTap() else {
+        guard AXIsProcessTrusted() else {
             if attempt == totalAttempts {
-                NSLog("[EventTap] Recovery (%@) stopped: permission unavailable", reason)
+                NSLog("[EventTap] Recovery (%@) stopped: Accessibility unavailable", reason)
             }
             return
         }

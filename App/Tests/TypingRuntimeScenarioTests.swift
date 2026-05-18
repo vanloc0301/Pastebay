@@ -111,7 +111,10 @@ final class TypingRuntimeScenarioTests: XCTestCase {
             PHTVTypingRuntimeStateMachine.shouldPerformInProcessRecovery(snapshot: snapshot)
         )
         XCTAssertFalse(
-            PHTVTypingRuntimeStateMachine.shouldFallbackRelaunchAfterEventTapFailures(snapshot: snapshot)
+            PHTVTypingRuntimeStateMachine.shouldFallbackRelaunchAfterEventTapFailures(
+                snapshot: snapshot,
+                needsRelaunchAfterPermission: true
+            )
         )
     }
 

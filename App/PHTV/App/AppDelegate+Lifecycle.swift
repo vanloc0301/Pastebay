@@ -145,8 +145,8 @@ func phtvIsRunningUnderXCTest() -> Bool {
         PHTVManager.startTCCNotificationListener()
         NSLog("[TCC] Notification listener started at app launch")
 
-        if !PHTVManager.canCreateEventTap() {
-            runHotkeyHealthCheck(reason: "launch-no-permission")
+        if !AXIsProcessTrusted() {
+            runHotkeyHealthCheck(reason: "launch-no-accessibility")
             publishTypingPermissionState(eventTapReady: false)
             askPermission()
             attemptAutomaticTCCRepairIfNeeded()

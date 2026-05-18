@@ -8,6 +8,7 @@
 //
 
 import AppKit
+import ApplicationServices
 import Foundation
 
 private let phtvDefaultsKeyShowUIOnStartup = "ShowUIOnStartup"
@@ -37,6 +38,7 @@ func phtvShouldRelaunchAfterAccessibilityGrant(
 
 func phtvShouldFallbackRelaunchAfterEventTapFailures(
     accessibilityTrusted: Bool,
+    needsRelaunchAfterPermission: Bool,
     isRelaunchAlreadyScheduled: Bool
 ) -> Bool {
     PHTVTypingRuntimeStateMachine.shouldFallbackRelaunchAfterEventTapFailures(
@@ -46,7 +48,8 @@ func phtvShouldFallbackRelaunchAfterEventTapFailures(
             relaunchPending: isRelaunchAlreadyScheduled,
             safeModeEnabled: false,
             activeAppProfile: .generic
-        )
+        ),
+        needsRelaunchAfterPermission: needsRelaunchAfterPermission
     )
 }
 
@@ -244,10 +247,10 @@ private nonisolated func phtvAttemptTCCRepairInBackground() async -> (fixed: Boo
         }
 
         if resetState {
-            wasAccessibilityEnabled = PHTVManager.canCreateEventTap()
+            wasAccessibilityEnabled = AXIsProcessTrusted()
         }
 
-        NSLog("[Accessibility] Started monitoring via test event tap (interval: %.1fs, resetState: %@)",
+        NSLog("[Accessibility] Started monitoring via AX trust (interval: %.1fs, resetState: %@)",
               interval,
               resetState ? "YES" : "NO")
     }
@@ -282,7 +285,7 @@ private nonisolated func phtvAttemptTCCRepairInBackground() async -> (fixed: Boo
     }
 
     func runHealthCheck() {
-        if !PHTVManager.canCreateEventTap() {
+        if !AXIsProcessTrusted() {
             publishTypingPermissionState(eventTapReady: false)
             return
         }
@@ -295,7 +298,7 @@ private nonisolated func phtvAttemptTCCRepairInBackground() async -> (fixed: Boo
     }
 
     func checkAccessibilityStatus() {
-        let isEnabled = PHTVManager.canCreateEventTap()
+        let isEnabled = AXIsProcessTrusted()
         let statusChanged = (wasAccessibilityEnabled != isEnabled)
 
         if !phtvShouldPerformInProcessRecovery(
@@ -321,12 +324,12 @@ private nonisolated func phtvAttemptTCCRepairInBackground() async -> (fixed: Boo
         }
 
         if !wasAccessibilityEnabled && isEnabled {
-            NSLog("[Accessibility] ✅ Permission GRANTED (via test tap) - Initializing...")
+            NSLog("[Accessibility] Permission GRANTED (via AX trust) - Initializing event tap...")
             accessibilityStableCount = 0
             publishTypingPermissionState(eventTapReady: false)
             performAccessibilityGrantedRestart()
         } else if wasAccessibilityEnabled && !isEnabled {
-            NSLog("[Accessibility] 🛑 CRITICAL - Permission REVOKED (test tap failed)!")
+            NSLog("[Accessibility] CRITICAL - Permission REVOKED (AX trust is false)!")
             accessibilityStableCount = 0
             if !AXIsProcessTrusted() {
                 needsRelaunchAfterPermission = true
@@ -404,6 +407,7 @@ private nonisolated func phtvAttemptTCCRepairInBackground() async -> (fixed: Boo
 
             let shouldRelaunch = phtvShouldFallbackRelaunchAfterEventTapFailures(
                 accessibilityTrusted: AXIsProcessTrusted(),
+                needsRelaunchAfterPermission: needsRelaunchAfterPermission,
                 isRelaunchAlreadyScheduled: isRelaunchingAfterPermissionGrant
             )
 

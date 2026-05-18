@@ -57,6 +57,7 @@ final class AccessibilityRelaunchPolicyTests: XCTestCase {
         XCTAssertTrue(
             phtvShouldFallbackRelaunchAfterEventTapFailures(
                 accessibilityTrusted: true,
+                needsRelaunchAfterPermission: true,
                 isRelaunchAlreadyScheduled: false
             )
         )
@@ -64,6 +65,7 @@ final class AccessibilityRelaunchPolicyTests: XCTestCase {
         XCTAssertFalse(
             phtvShouldFallbackRelaunchAfterEventTapFailures(
                 accessibilityTrusted: false,
+                needsRelaunchAfterPermission: true,
                 isRelaunchAlreadyScheduled: false
             )
         )
@@ -71,7 +73,18 @@ final class AccessibilityRelaunchPolicyTests: XCTestCase {
         XCTAssertFalse(
             phtvShouldFallbackRelaunchAfterEventTapFailures(
                 accessibilityTrusted: true,
+                needsRelaunchAfterPermission: true,
                 isRelaunchAlreadyScheduled: true
+            )
+        )
+    }
+
+    func testFallbackRelaunchAfterEventTapFailuresDoesNotFireWhenAppLaunchedWithAccessibilityAlreadyTrusted() {
+        XCTAssertFalse(
+            phtvShouldFallbackRelaunchAfterEventTapFailures(
+                accessibilityTrusted: true,
+                needsRelaunchAfterPermission: false,
+                isRelaunchAlreadyScheduled: false
             )
         )
     }
