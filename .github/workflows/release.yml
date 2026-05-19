@@ -507,6 +507,13 @@ jobs:
             "$DMG_NAME" \
             "$TEMP_DIR"
 
+          echo "🔐 Signing DMG..."
+          codesign --force --sign "${{ steps.certificate.outputs.identity }}" \
+            --timestamp \
+            --keychain "${{ steps.certificate.outputs.keychain }}" \
+            "$DMG_NAME"
+          codesign --verify --verbose=2 "$DMG_NAME"
+
           SIZE=$(stat -f%z "$DMG_NAME")
           echo "name=$DMG_NAME" >> "$GITHUB_OUTPUT"
           echo "size=$SIZE" >> "$GITHUB_OUTPUT"
