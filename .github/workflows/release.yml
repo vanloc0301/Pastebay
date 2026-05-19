@@ -540,22 +540,45 @@ jobs:
           fi
 
           echo "📤 Submitting $DMG_NAME to Apple notarization..."
-          NOTARY_RESULT="$RUNNER_TEMP/notary-${{ matrix.arch }}.json"
+          SUBMIT_RESULT="$RUNNER_TEMP/notary-submit-${{ matrix.arch }}.json"
+          NOTARY_RESULT="$RUNNER_TEMP/notary-info-${{ matrix.arch }}.json"
           xcrun notarytool submit "$DMG_NAME" \
             --apple-id "$APPLE_ID" \
             --team-id "$APPLE_TEAM_ID" \
             --password "$APPLE_APP_SPECIFIC_PASSWORD" \
-            --wait \
-            --timeout 45m \
             --output-format json \
-            > "$NOTARY_RESULT"
+            > "$SUBMIT_RESULT"
 
-          cat "$NOTARY_RESULT"
+          cat "$SUBMIT_RESULT"
 
-          SUBMISSION_ID=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("id",""))' "$NOTARY_RESULT")
-          STATUS=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("status",""))' "$NOTARY_RESULT")
+          SUBMISSION_ID=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("id",""))' "$SUBMIT_RESULT")
+          if [ -z "$SUBMISSION_ID" ]; then
+            echo "❌ Error: notarytool submit did not return a submission id."
+            exit 1
+          fi
+
+          STATUS=""
+          for attempt in {1..90}; do
+            echo "🔎 Checking notarization status ($attempt/90) for $SUBMISSION_ID..."
+            if xcrun notarytool info "$SUBMISSION_ID" \
+              --apple-id "$APPLE_ID" \
+              --team-id "$APPLE_TEAM_ID" \
+              --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+              --output-format json \
+              > "$NOTARY_RESULT"; then
+              cat "$NOTARY_RESULT"
+              STATUS=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("status",""))' "$NOTARY_RESULT")
+              if [ "$STATUS" = "Accepted" ] || [ "$STATUS" = "Invalid" ] || [ "$STATUS" = "Rejected" ]; then
+                break
+              fi
+            else
+              echo "⚠️  notarytool info failed, will retry."
+            fi
+            sleep 30
+          done
+
           if [ "$STATUS" != "Accepted" ]; then
-            echo "❌ Notarization failed with status: $STATUS"
+            echo "❌ Notarization failed with status: ${STATUS:-unknown}"
             if [ -n "$SUBMISSION_ID" ]; then
               echo "📋 Apple notary log for $SUBMISSION_ID:"
               xcrun notarytool log "$SUBMISSION_ID" \
@@ -698,6 +721,7 @@ jobs:
 
       - name: Upload build log
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v6
         with:
           name: build-log-${{ matrix.arch }}
