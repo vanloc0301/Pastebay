@@ -140,53 +140,49 @@ jobs:
             exit 1
           fi
 
-          SUBMIT_RESULT="$RUNNER_TEMP/notary-smoke-submit.json"
-          INFO_RESULT="$RUNNER_TEMP/notary-smoke-info.json"
+          SUBMIT_LOG="$RUNNER_TEMP/notary-smoke-submit.log"
 
+          # Use --wait so notarytool blocks until Apple returns a final status.
+          # This avoids the manual poll loop and the "In Progress" stuck failure mode.
+          set +e
           xcrun notarytool submit "$SMOKE_ZIP" \
             --apple-id "$APPLE_ID" \
             --team-id "$APPLE_TEAM_ID" \
             --password "$APPLE_APP_SPECIFIC_PASSWORD" \
-            --output-format json \
-            > "$SUBMIT_RESULT"
-          cat "$SUBMIT_RESULT"
+            --wait \
+            --timeout 1800 \
+            2>&1 | tee "$SUBMIT_LOG"
+          NOTARY_EXIT=$?
+          set -e
 
-          SUBMISSION_ID=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("id",""))' "$SUBMIT_RESULT")
-          if [ -z "$SUBMISSION_ID" ]; then
-            echo "❌ Error: notarytool submit did not return a submission id."
-            exit 1
+          SUBMISSION_ID=$(grep -oE 'id: [0-9a-f-]{36}' "$SUBMIT_LOG" | head -1 | awk '{print $2}' || true)
+
+          if grep -q 'status: Accepted' "$SUBMIT_LOG"; then
+            STATUS="Accepted"
+          elif grep -q 'status: Invalid' "$SUBMIT_LOG"; then
+            STATUS="Invalid"
+          elif grep -q 'status: Rejected' "$SUBMIT_LOG"; then
+            STATUS="Rejected"
+          else
+            STATUS="Unknown"
           fi
 
-          STATUS=""
-          for attempt in $(seq 1 60); do
-            echo "🔎 Smoke notarization status ($attempt/60) for $SUBMISSION_ID..."
-            xcrun notarytool info "$SUBMISSION_ID" \
-              --apple-id "$APPLE_ID" \
-              --team-id "$APPLE_TEAM_ID" \
-              --password "$APPLE_APP_SPECIFIC_PASSWORD" \
-              --output-format json \
-              > "$INFO_RESULT"
-            cat "$INFO_RESULT"
-
-            STATUS=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("status",""))' "$INFO_RESULT")
-            if [ "$STATUS" = "Accepted" ] || [ "$STATUS" = "Invalid" ] || [ "$STATUS" = "Rejected" ]; then
-              break
-            fi
-            sleep 30
-          done
+          echo "📋 Smoke notarization result: status=$STATUS exit=$NOTARY_EXIT"
 
           if [ "$STATUS" != "Accepted" ]; then
-            echo "❌ Smoke notarization status: ${STATUS:-unknown}"
+            echo "❌ Smoke notarization status: $STATUS"
             echo "📚 Recent Apple notary history for this team:"
             xcrun notarytool history \
               --apple-id "$APPLE_ID" \
               --team-id "$APPLE_TEAM_ID" \
               --password "$APPLE_APP_SPECIFIC_PASSWORD" || true
-            echo "📋 Apple notary log for $SUBMISSION_ID:"
-            xcrun notarytool log "$SUBMISSION_ID" \
-              --apple-id "$APPLE_ID" \
-              --team-id "$APPLE_TEAM_ID" \
-              --password "$APPLE_APP_SPECIFIC_PASSWORD" || true
+            if [ -n "$SUBMISSION_ID" ]; then
+              echo "📋 Apple notary log for $SUBMISSION_ID:"
+              xcrun notarytool log "$SUBMISSION_ID" \
+                --apple-id "$APPLE_ID" \
+                --team-id "$APPLE_TEAM_ID" \
+                --password "$APPLE_APP_SPECIFIC_PASSWORD" || true
+            fi
             exit 1
           fi
 

@@ -548,72 +548,43 @@ jobs:
             exit 1
           fi
 
-          echo "📤 Submitting $DMG_NAME to Apple notarization..."
-          SUBMIT_RESULT="$RUNNER_TEMP/notary-submit-${{ matrix.arch }}.json"
-          NOTARY_RESULT="$RUNNER_TEMP/notary-info-${{ matrix.arch }}.json"
+          echo "📤 Submitting $DMG_NAME to Apple notarization (waiting for result)..."
+          SUBMIT_LOG="$RUNNER_TEMP/notary-submit-${{ matrix.arch }}.log"
+
+          # Use --wait so notarytool blocks until Apple returns a final status
+          # (Accepted / Invalid / Rejected). This avoids manual polling loops
+          # and the "In Progress" stuck-forever failure mode that occurs when
+          # the poll window expires before Apple finishes processing.
+          # Timeout is set generously (90 min) to handle slow Apple queues.
+          set +e
           xcrun notarytool submit "$DMG_NAME" \
             --apple-id "$APPLE_ID" \
             --team-id "$APPLE_TEAM_ID" \
             --password "$APPLE_APP_SPECIFIC_PASSWORD" \
-            --output-format json \
-            > "$SUBMIT_RESULT"
+            --wait \
+            --timeout 5400 \
+            2>&1 | tee "$SUBMIT_LOG"
+          NOTARY_EXIT=$?
+          set -e
 
-          cat "$SUBMIT_RESULT"
+          # Extract submission ID from the log output for diagnostics
+          SUBMISSION_ID=$(grep -oE 'id: [0-9a-f-]{36}' "$SUBMIT_LOG" | head -1 | awk '{print $2}' || true)
 
-          SUBMISSION_ID=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("id",""))' "$SUBMIT_RESULT")
-          if [ -z "$SUBMISSION_ID" ]; then
-            echo "❌ Error: notarytool submit did not return a submission id."
-            exit 1
+          # Determine final status from log output
+          if grep -q 'status: Accepted' "$SUBMIT_LOG"; then
+            STATUS="Accepted"
+          elif grep -q 'status: Invalid' "$SUBMIT_LOG"; then
+            STATUS="Invalid"
+          elif grep -q 'status: Rejected' "$SUBMIT_LOG"; then
+            STATUS="Rejected"
+          else
+            STATUS="Unknown"
           fi
 
-          STATUS=""
-          MAX_ATTEMPTS=600
-          # If notarization remains "In Progress" for too long, fail early
-          # and dump notary logs for faster diagnostics during CI runs.
-          DEBUG_DUMP_AFTER_ATTEMPTS=40
-
-          for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
-            echo "🔎 Checking notarization status ($attempt/$MAX_ATTEMPTS) for $SUBMISSION_ID..."
-            if xcrun notarytool info "$SUBMISSION_ID" \
-              --apple-id "$APPLE_ID" \
-              --team-id "$APPLE_TEAM_ID" \
-              --password "$APPLE_APP_SPECIFIC_PASSWORD" \
-              --output-format json \
-              > "$NOTARY_RESULT"; then
-              cat "$NOTARY_RESULT"
-              STATUS=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("status",""))' "$NOTARY_RESULT")
-              if [ "$STATUS" = "Accepted" ] || [ "$STATUS" = "Invalid" ] || [ "$STATUS" = "Rejected" ]; then
-                break
-              fi
-            else
-              echo "⚠️  notarytool info failed, will retry."
-            fi
-            # If we've polled DEBUG_DUMP_AFTER_ATTEMPTS times without final status,
-            # dump notary logs to the runner for troubleshooting and fail early so
-            # maintainers get faster feedback instead of waiting hours.
-            if [ "$attempt" -eq "$DEBUG_DUMP_AFTER_ATTEMPTS" ]; then
-              echo "⚠️ Notarization still 'In Progress' after $DEBUG_DUMP_AFTER_ATTEMPTS checks; dumping notary log and history for diagnostics."
-              xcrun notarytool log "$SUBMISSION_ID" \
-                --apple-id "$APPLE_ID" \
-                --team-id "$APPLE_TEAM_ID" \
-                --password "$APPLE_APP_SPECIFIC_PASSWORD" || true
-              xcrun notarytool history \
-                --apple-id "$APPLE_ID" \
-                --team-id "$APPLE_TEAM_ID" \
-                --password "$APPLE_APP_SPECIFIC_PASSWORD" || true
-              echo "Failing early to allow maintainers to inspect logs and re-run the workflow."
-              exit 1
-            fi
-
-            sleep 30
-          done
+          echo "📋 Notarization result: status=$STATUS exit=$NOTARY_EXIT"
 
           if [ "$STATUS" != "Accepted" ]; then
-            echo "❌ Notarization failed with status: ${STATUS:-unknown}"
-            if [ "$STATUS" = "In Progress" ]; then
-              echo "Apple notary service did not finish within $((MAX_ATTEMPTS / 2)) minutes."
-              echo "This usually means Apple's queue is backed up. Re-run the workflow later."
-            fi
+            echo "❌ Notarization failed with status: $STATUS"
             echo "📚 Recent Apple notary history for this team:"
             xcrun notarytool history \
               --apple-id "$APPLE_ID" \
