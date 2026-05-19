@@ -217,20 +217,34 @@ struct PHTVVietnameseComposer {
             let c1 = output[i]
             let c2 = output[i + 1]
 
-            let isU1 = c1 == "u" || c1 == "U"
-            let isUw1 = c1 == "ư" || c1 == "Ư"
-            let isO2 = c2 == "o" || c2 == "O"
-            let isOw2 = c2 == "ơ" || c2 == "Ơ"
+            let decomp1 = PHTVVietnameseToneTable.decompose(c1)
+            let decomp2 = PHTVVietnameseToneTable.decompose(c2)
+
+            let base1 = decomp1.base
+            let base2 = decomp2.base
+
+            let isU1 = base1 == "u" || base1 == "U"
+            let isUw1 = base1 == "ư" || base1 == "Ư"
+            let isO2 = base2 == "o" || base2 == "O"
+            let isOw2 = base2 == "ơ" || base2 == "Ơ"
 
             if (isU1 && isOw2) || (isUw1 && isO2) {
-                let isUpper1 = c1.isUppercase
-                output[i] = isUpper1 ? "Ư" : "ư"
-                let isUpper2 = c2.isUppercase
-                output[i + 1] = isUpper2 ? "Ơ" : "ơ"
+                let normBase1: Character = base1.isUppercase ? "Ư" : "ư"
+                let normBase2: Character = base2.isUppercase ? "Ơ" : "ơ"
+
+                let activeTone = decomp1.tone ?? decomp2.tone
+                if let activeTone {
+                    output[i] = normBase1
+                    output[i + 1] = PHTVVietnameseToneTable.apply(tone: activeTone, to: normBase2)
+                } else {
+                    output[i] = normBase1
+                    output[i + 1] = normBase2
+                }
             }
         }
         return output
     }
+
 
     private func apply(tone: PHTVTone, to characters: [Character]) -> String {
         var output = characters
@@ -360,6 +374,23 @@ private enum PHTVVietnameseToneTable {
         "Ư": [.acute: "Ứ", .grave: "Ừ", .hook: "Ử", .tilde: "Ữ", .dot: "Ự"],
         "Y": [.acute: "Ý", .grave: "Ỳ", .hook: "Ỷ", .tilde: "Ỹ", .dot: "Ỵ"],
     ]
+ 
+    private static let reverseTable: [Character: (base: Character, tone: PHTVTone)] = {
+        var rev: [Character: (Character, PHTVTone)] = [:]
+        for (base, tones) in table {
+            for (tone, char) in tones {
+                rev[char] = (base, tone)
+            }
+        }
+        return rev
+    }()
+
+    static func decompose(_ character: Character) -> (base: Character, tone: PHTVTone?) {
+        if let match = reverseTable[character] {
+            return (match.base, match.tone)
+        }
+        return (character, nil)
+    }
 
     static func contains(_ character: Character) -> Bool {
         table[character] != nil

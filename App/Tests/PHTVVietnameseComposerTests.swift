@@ -93,5 +93,13 @@ final class PHTVVietnameseComposerTests: XCTestCase {
         XCTAssertEqual(composer.compose("huong71", style: .vni), "hướng")
         XCTAssertEqual(composer.compose("HU7ONG1", style: .vni), "HƯỚNG")
         XCTAssertEqual(composer.compose("Hu7ong1", style: .vni), "Hướng")
+
+        // Precomposed/Partial composition normalization
+        XCTAssertEqual(composer.compose("hứo", style: .telex), "hướ")
+        XCTAssertEqual(composer.compose("huớ", style: .telex), "hướ")
+        XCTAssertEqual(composer.compose("hứong", style: .telex), "hướng")
+        XCTAssertEqual(composer.compose("huớng", style: .telex), "hướng")
+        XCTAssertEqual(composer.compose("Hứong", style: .telex), "Hướng")
+        XCTAssertEqual(composer.compose("HUỚNG", style: .telex), "HƯỚNG")
     }
 }

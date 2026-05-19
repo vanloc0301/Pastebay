@@ -102,4 +102,13 @@ assertEqual(composer.compose("a11", style: .vni), "a1", "a11 -> a1")
 assertEqual(composer.compose("a111", style: .vni), "á1", "a111 -> á1")
 assertEqual(composer.compose("a1111", style: .vni), "a11", "a1111 -> a11")
 
+// Test 10: Pre-composed / Partial Spelling Normalization
+assertEqual(composer.compose("hứo", style: .telex), "hướ", "hứo -> hướ")
+assertEqual(composer.compose("huớ", style: .telex), "hướ", "huớ -> hướ")
+assertEqual(composer.compose("hứong", style: .telex), "hướng", "hứong -> hướng")
+assertEqual(composer.compose("huớng", style: .telex), "hướng", "huớng -> hướng")
+assertEqual(composer.compose("Hứong", style: .telex), "Hướng", "Hứong -> Hướng")
+assertEqual(composer.compose("HUỚNG", style: .telex), "HƯỚNG", "HUỚNG -> HƯỚNG")
+
 print("✨ ALL TESTS PASSED SUCCESSFULLY! (60+ assertions)")
+
