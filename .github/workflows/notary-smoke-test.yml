@@ -177,6 +177,11 @@ jobs:
 
           if [ "$STATUS" != "Accepted" ]; then
             echo "❌ Smoke notarization status: ${STATUS:-unknown}"
+            echo "📚 Recent Apple notary history for this team:"
+            xcrun notarytool history \
+              --apple-id "$APPLE_ID" \
+              --team-id "$APPLE_TEAM_ID" \
+              --password "$APPLE_APP_SPECIFIC_PASSWORD" || true
             echo "📋 Apple notary log for $SUBMISSION_ID:"
             xcrun notarytool log "$SUBMISSION_ID" \
               --apple-id "$APPLE_ID" \
@@ -186,4 +191,3 @@ jobs:
           fi
 
           echo "✅ Minimal signed app notarized successfully."
-
