@@ -14,61 +14,82 @@ struct PHTVVietnameseComposer {
     }
 
     private func composeTelex(_ rawText: String, style: PHTVInputStyle) -> String {
-        var characters = Array(rawText)
-        var tone: PHTVTone?
+        let characters = Array(rawText)
+        var output: [Character] = []
+        var activeTone: PHTVTone? = nil
+        var activeToneChar: Character? = nil
+        var activeToneIndex: Int? = nil
 
-        if let toneIndex = characters.lastIndex(where: { PHTVTelexMarker.tone(for: $0) != nil }) {
-            // Tone marker is only valid when at least one vowel precedes it in the
-            // raw sequence. Without this guard, a leading consonant that matches a
-            // tone key (e.g. the "s" in "sai") would be silently consumed, turning
-            // "sai" into "ái".
-            let hasVowelBefore = characters[0..<toneIndex].contains {
-                PHTVVietnameseToneTable.contains($0) || $0.lowercased() == "w"
+        for char in characters {
+            if let tone = PHTVTelexMarker.tone(for: char) {
+                let hasVowelBefore = output.contains {
+                    PHTVVietnameseToneTable.contains($0) || $0.lowercased() == "w"
+                }
+                if hasVowelBefore {
+                    if let current = activeTone, current == tone {
+                        activeTone = nil
+                        if let skipIdx = activeToneIndex, let skipChar = activeToneChar {
+                            output.insert(skipChar, at: min(skipIdx, output.count))
+                        }
+                        activeToneChar = nil
+                        activeToneIndex = nil
+                    } else {
+                        activeTone = tone
+                        activeToneChar = char
+                        activeToneIndex = output.count
+                    }
+                    continue
+                }
             }
-            if hasVowelBefore {
-                tone = PHTVTelexMarker.tone(for: characters[toneIndex])
-                characters.remove(at: toneIndex)
-            }
+            output.append(char)
         }
 
-        if tone == .clear {
-            characters.removeAll { PHTVTelexMarker.tone(for: $0) != nil }
-        }
-
-        let base = applyTelexShapes(to: characters, style: style)
-        guard let tone, tone != .clear else { return String(base) }
-        return apply(tone: tone, to: base)
+        let base = applyTelexShapes(to: output, style: style)
+        guard let activeTone, activeTone != .clear else { return String(base) }
+        return apply(tone: activeTone, to: base)
     }
 
     private func composeVNI(_ rawText: String) -> String {
-        var characters = Array(rawText)
-        var tone: PHTVTone?
+        let characters = Array(rawText)
+        var output: [Character] = []
+        var activeTone: PHTVTone? = nil
+        var activeToneChar: Character? = nil
+        var activeToneIndex: Int? = nil
 
-        if let toneIndex = characters.lastIndex(where: { PHTVVNIMarker.tone(for: $0) != nil }) {
-            // Tone marker is only valid when at least one vowel precedes it.
-            let hasVowelBefore = characters[0..<toneIndex].contains {
-                PHTVVietnameseToneTable.contains($0)
+        for char in characters {
+            if let tone = PHTVVNIMarker.tone(for: char) {
+                let hasVowelBefore = output.contains {
+                    PHTVVietnameseToneTable.contains($0)
+                }
+                if hasVowelBefore {
+                    if let current = activeTone, current == tone {
+                        activeTone = nil
+                        if let skipIdx = activeToneIndex, let skipChar = activeToneChar {
+                            output.insert(skipChar, at: min(skipIdx, output.count))
+                        }
+                        activeToneChar = nil
+                        activeToneIndex = nil
+                    } else {
+                        activeTone = tone
+                        activeToneChar = char
+                        activeToneIndex = output.count
+                    }
+                    continue
+                }
             }
-            if hasVowelBefore {
-                tone = PHTVVNIMarker.tone(for: characters[toneIndex])
-                characters.remove(at: toneIndex)
-            }
+            output.append(char)
         }
 
-        if tone == .clear {
-            characters.removeAll { PHTVVNIMarker.tone(for: $0) != nil }
-        }
-
-        let base = applyVNIShapes(to: characters)
-        guard let tone, tone != .clear else { return String(base) }
-        return apply(tone: tone, to: base)
+        let base = applyVNIShapes(to: output)
+        guard let activeTone, activeTone != .clear else { return String(base) }
+        return apply(tone: activeTone, to: base)
     }
 
     private func applyTelexShapes(to characters: [Character], style: PHTVInputStyle) -> [Character] {
         var output: [Character] = []
         output.reserveCapacity(characters.count)
 
-        for character in characters {
+        for (index, character) in characters.enumerated() {
             let lower = character.lowercased()
             switch lower {
             case "a":
@@ -88,6 +109,23 @@ struct PHTVVietnameseComposer {
                     continue
                 }
             case "w":
+                let isConsecutiveW = index > 0 && characters[index - 1].lowercased() == "w"
+                if isConsecutiveW {
+                    let prevWIndex = index - 1
+                    let hasVowelBeforePrevW = prevWIndex > 0 && ["u", "o", "a"].contains(characters[prevWIndex - 1].lowercased())
+                    
+                    if hasVowelBeforePrevW {
+                        output.append(character.isUppercase ? "W" : "w")
+                    } else {
+                        if !output.isEmpty && (output.last == "ư" || output.last == "Ư") {
+                            output[output.count - 1] = character.isUppercase ? "W" : "w"
+                        } else {
+                            output.append(character.isUppercase ? "W" : "w")
+                        }
+                    }
+                    continue
+                }
+
                 if applyTelexW(to: &output, uppercase: character.isUppercase, style: style) {
                     continue
                 }
