@@ -76,4 +76,22 @@ final class PHTVVietnameseComposerTests: XCTestCase {
         XCTAssertEqual(composer.compose("qua1n", style: .vni), "quán")
         XCTAssertEqual(composer.compose("sai", style: .vni), "sai")
     }
+
+    func testSpellingNormalization() {
+        // Telex spelling normalization for ươ
+        XCTAssertEqual(composer.compose("huwongs", style: .telex), "hướng")
+        XCTAssertEqual(composer.compose("huwong", style: .telex), "hương")
+        XCTAssertEqual(composer.compose("huongw", style: .telex), "hương")
+        XCTAssertEqual(composer.compose("huongws", style: .telex), "hướng")
+        XCTAssertEqual(composer.compose("HUWONGS", style: .telex), "HƯỚNG")
+        XCTAssertEqual(composer.compose("Huwongs", style: .telex), "Hướng")
+
+        // VNI spelling normalization for ươ
+        XCTAssertEqual(composer.compose("hu7ong", style: .vni), "hương")
+        XCTAssertEqual(composer.compose("huong7", style: .vni), "hương")
+        XCTAssertEqual(composer.compose("hu7ong1", style: .vni), "hướng")
+        XCTAssertEqual(composer.compose("huong71", style: .vni), "hướng")
+        XCTAssertEqual(composer.compose("HU7ONG1", style: .vni), "HƯỚNG")
+        XCTAssertEqual(composer.compose("Hu7ong1", style: .vni), "Hướng")
+    }
 }
