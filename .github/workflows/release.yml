@@ -548,6 +548,12 @@ jobs:
             exit 1
           fi
 
+          echo "📚 Recent Apple notary history before submitting:"
+          xcrun notarytool history \
+            --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_APP_SPECIFIC_PASSWORD" || true
+
           echo "📤 Submitting $DMG_NAME to Apple notarization (waiting for result)..."
           SUBMIT_LOG="$RUNNER_TEMP/notary-submit-${{ matrix.arch }}.log"
 
@@ -555,14 +561,15 @@ jobs:
           # (Accepted / Invalid / Rejected). This avoids manual polling loops
           # and the "In Progress" stuck-forever failure mode that occurs when
           # the poll window expires before Apple finishes processing.
-          # Timeout is set generously (90 min) to handle slow Apple queues.
+          # Timeout is set generously (5h) for first-time notarization and
+          # backed-up Apple queues, while still staying under the 360m job cap.
           set +e
           xcrun notarytool submit "$DMG_NAME" \
             --apple-id "$APPLE_ID" \
             --team-id "$APPLE_TEAM_ID" \
             --password "$APPLE_APP_SPECIFIC_PASSWORD" \
             --wait \
-            --timeout 5400 \
+            --timeout 5h \
             2>&1 | tee "$SUBMIT_LOG"
           NOTARY_EXIT=$?
           set -e
