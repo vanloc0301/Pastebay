@@ -51,6 +51,7 @@ jobs:
             -T /usr/bin/security \
             -A
 
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
           IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" \
@@ -194,4 +195,6 @@ jobs:
           if [ -n "$KEYCHAIN_PATH" ] && [ -f "$KEYCHAIN_PATH" ]; then
             security delete-keychain "$KEYCHAIN_PATH" || true
           fi
+          security list-keychains -d user -s "$HOME/Library/Keychains/login.keychain-db" || true
+          security default-keychain -s "$HOME/Library/Keychains/login.keychain-db" || true
           rm -f "$RUNNER_TEMP/certificate.p12" "$RUNNER_TEMP/NotarySmoke.zip" "$RUNNER_TEMP/smoke.c"
