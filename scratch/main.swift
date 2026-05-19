@@ -144,6 +144,7 @@ assertEqual(composer.compose("giups", style: PHTVInputStyle.telex), "giúp")
 assertEqual(composer.compose("quans", style: PHTVInputStyle.telex), "quán")
 assertEqual(composer.compose("huowsng", style: PHTVInputStyle.telex), "hướng")
 assertEqual(composer.compose("xoong", style: PHTVInputStyle.telex), "xông")
+assertEqual(composer.compose("dduaw", style: PHTVInputStyle.telex), "đưa")
 
 print("--- Test Run Completed ---")
 print("Passed: \(passedTests) assertions")

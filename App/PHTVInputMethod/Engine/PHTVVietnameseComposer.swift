@@ -170,11 +170,28 @@ struct PHTVVietnameseComposer {
     private func applyTelexW(to output: inout [Character], uppercase: Bool, style: PHTVInputStyle) -> Bool {
         if output.count >= 2,
            output[output.count - 2].lowercased() == "u",
+           output[output.count - 1].lowercased() == "a" {
+            let isPartofQu = output.count >= 3 && output[output.count - 3].lowercased() == "q"
+            if !isPartofQu {
+                let isUpper1 = output[output.count - 2].isUppercase
+                let isUpper2 = output[output.count - 1].isUppercase
+                output[output.count - 2] = isUpper1 ? "Ư" : "ư"
+                output[output.count - 1] = isUpper2 ? "A" : "a"
+                return true
+            }
+        }
+
+        if output.count >= 2,
+           output[output.count - 2].lowercased() == "u",
            output[output.count - 1].lowercased() == "o" {
-            let upperPair = output[output.count - 2].isUppercase && output[output.count - 1].isUppercase
-            output[output.count - 2] = upperPair ? "Ư" : "ư"
-            output[output.count - 1] = upperPair ? "Ơ" : "ơ"
-            return true
+            let isPartofQu = output.count >= 3 && output[output.count - 3].lowercased() == "q"
+            if !isPartofQu {
+                let isUpper1 = output[output.count - 2].isUppercase
+                let isUpper2 = output[output.count - 1].isUppercase
+                output[output.count - 2] = isUpper1 ? "Ư" : "ư"
+                output[output.count - 1] = isUpper2 ? "Ơ" : "ơ"
+                return true
+            }
         }
 
         if replaceLastVowel(in: &output, using: [

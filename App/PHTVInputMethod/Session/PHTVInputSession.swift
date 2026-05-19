@@ -92,7 +92,7 @@ final class PHTVInputSession {
         if engine.isComposing {
             markComposition(client: client)
         } else {
-            client.commit("", replacementRange: replacementRangeForCommit(client: client))
+            client.clearMarkedText(replacementRange: replacementRangeForCommit(client: client))
             resetMarkedTextTracking()
         }
         return true
@@ -115,7 +115,7 @@ final class PHTVInputSession {
         }
 
         let text = engine.composedText
-        client.commit(text, replacementRange: replacementRangeForMark(client: client))
+        client.mark(text, replacementRange: replacementRangeForMark(client: client))
         markedTextLength = text.utf16.count
     }
 
