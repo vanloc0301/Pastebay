@@ -57,11 +57,15 @@ final class PHTVInputController: IMKInputController {
         let menu = NSMenu(title: "PHTV")
         let config = PHTVInputMethodPreferences.currentConfiguration()
 
-        // Kiểu gõ submenu
-        let styleMenu = NSMenu(title: "Kiểu gõ")
+        // Kiểu gõ section header
+        let styleHeader = NSMenuItem(title: "Kiểu gõ", action: nil, keyEquivalent: "")
+        styleHeader.isEnabled = false
+        menu.addItem(styleHeader)
+
+        // Kiểu gõ items
         for style in PHTVInputStyle.allCases {
             let item = NSMenuItem(
-                title: style.displayName,
+                title: "  " + style.displayName,
                 action: #selector(selectInputStyle(_:)),
                 keyEquivalent: ""
             )
@@ -70,17 +74,20 @@ final class PHTVInputController: IMKInputController {
             if config.inputStyle == style {
                 item.state = .on
             }
-            styleMenu.addItem(item)
+            menu.addItem(item)
         }
-        let styleSubmenuItem = NSMenuItem(title: "Kiểu gõ", action: nil, keyEquivalent: "")
-        styleSubmenuItem.submenu = styleMenu
-        menu.addItem(styleSubmenuItem)
 
-        // Bảng mã submenu
-        let encodingMenu = NSMenu(title: "Bảng mã")
+        menu.addItem(NSMenuItem.separator())
+
+        // Bảng mã section header
+        let encodingHeader = NSMenuItem(title: "Bảng mã", action: nil, keyEquivalent: "")
+        encodingHeader.isEnabled = false
+        menu.addItem(encodingHeader)
+
+        // Bảng mã items
         for encoding in PHTVOutputEncoding.allCases {
             let item = NSMenuItem(
-                title: encoding.displayName,
+                title: "  " + encoding.displayName,
                 action: #selector(selectOutputEncoding(_:)),
                 keyEquivalent: ""
             )
@@ -89,11 +96,10 @@ final class PHTVInputController: IMKInputController {
             if config.outputEncoding == encoding {
                 item.state = .on
             }
-            encodingMenu.addItem(item)
+            menu.addItem(item)
         }
-        let encodingSubmenuItem = NSMenuItem(title: "Bảng mã", action: nil, keyEquivalent: "")
-        encodingSubmenuItem.submenu = encodingMenu
-        menu.addItem(encodingSubmenuItem)
+
+        menu.addItem(NSMenuItem.separator())
 
         // Tự động khôi phục tiếng Anh item
         let autoRestoreItem = NSMenuItem(
