@@ -54,7 +54,7 @@ struct PHTVInputMethodConfiguration {
 }
 
 enum PHTVInputMethodPreferences {
-    private static let inputMethodKey = "InputMethod"
+    private static let inputMethodKey = "InputType"
     private static let codeTableKey = "CodeTable"
     private static let preferenceDomains = [
         "com.phamhungtien.phtv.inputmethod",
@@ -81,6 +81,36 @@ enum PHTVInputMethodPreferences {
                 ?? PHTVInputMethodConfiguration.fallback.inputStyle,
             outputEncoding: PHTVOutputEncoding(rawValue: codeTableValue ?? PHTVInputMethodConfiguration.fallback.outputEncoding.rawValue)
                 ?? PHTVInputMethodConfiguration.fallback.outputEncoding
+        )
+    }
+
+    static func saveConfiguration(_ config: PHTVInputMethodConfiguration) {
+        let domain = "com.phamhungtien.phtv"
+        
+        // Write to App Suite defaults
+        if let defaults = UserDefaults(suiteName: domain) {
+            defaults.set(config.inputStyle.rawValue, forKey: "InputType")
+            defaults.set(config.outputEncoding.rawValue, forKey: "CodeTable")
+            defaults.synchronize()
+        }
+        
+        // Write to standard defaults
+        UserDefaults.standard.set(config.inputStyle.rawValue, forKey: "InputType")
+        UserDefaults.standard.set(config.outputEncoding.rawValue, forKey: "CodeTable")
+        UserDefaults.standard.synchronize()
+        
+        // Post notifications
+        NotificationCenter.default.post(
+            name: NSNotification.Name("InputMethodChanged"),
+            object: NSNumber(value: config.inputStyle.rawValue)
+        )
+        NotificationCenter.default.post(
+            name: NSNotification.Name("CodeTableChanged"),
+            object: NSNumber(value: config.outputEncoding.rawValue)
+        )
+        NotificationCenter.default.post(
+            name: NSNotification.Name("PHTVSettingsChanged"),
+            object: nil
         )
     }
 }

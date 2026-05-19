@@ -52,4 +52,83 @@ final class PHTVInputController: IMKInputController {
     private func session(for sender: Any!) -> PHTVInputSession {
         sessionStore.session(for: sender)
     }
+
+    override func menu() -> NSMenu! {
+        let menu = NSMenu(title: "PHTV")
+        let config = PHTVInputMethodPreferences.currentConfiguration()
+
+        // Kiểu gõ submenu
+        let styleMenu = NSMenu(title: "Kiểu gõ")
+        for style in PHTVInputStyle.allCases {
+            let item = NSMenuItem(
+                title: style.displayName,
+                action: #selector(selectInputStyle(_:)),
+                keyEquivalent: ""
+            )
+            item.tag = style.rawValue
+            item.target = self
+            if config.inputStyle == style {
+                item.state = .on
+            }
+            styleMenu.addItem(item)
+        }
+        let styleSubmenuItem = NSMenuItem(title: "Kiểu gõ", action: nil, keyEquivalent: "")
+        styleSubmenuItem.submenu = styleMenu
+        menu.addItem(styleSubmenuItem)
+
+        // Bảng mã submenu
+        let encodingMenu = NSMenu(title: "Bảng mã")
+        for encoding in PHTVOutputEncoding.allCases {
+            let item = NSMenuItem(
+                title: encoding.displayName,
+                action: #selector(selectOutputEncoding(_:)),
+                keyEquivalent: ""
+            )
+            item.tag = encoding.rawValue
+            item.target = self
+            if config.outputEncoding == encoding {
+                item.state = .on
+            }
+            encodingMenu.addItem(item)
+        }
+        let encodingSubmenuItem = NSMenuItem(title: "Bảng mã", action: nil, keyEquivalent: "")
+        encodingSubmenuItem.submenu = encodingMenu
+        menu.addItem(encodingSubmenuItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        // Preferences button
+        let preferencesItem = NSMenuItem(
+            title: "Cấu hình...",
+            action: #selector(openPreferences(_:)),
+            keyEquivalent: ""
+        )
+        preferencesItem.target = self
+        menu.addItem(preferencesItem)
+
+        return menu
+    }
+
+    @objc private func selectInputStyle(_ sender: NSMenuItem) {
+        guard let style = PHTVInputStyle(rawValue: sender.tag) else { return }
+        var config = PHTVInputMethodPreferences.currentConfiguration()
+        config.inputStyle = style
+        PHTVInputMethodPreferences.saveConfiguration(config)
+    }
+
+    @objc private func selectOutputEncoding(_ sender: NSMenuItem) {
+        guard let encoding = PHTVOutputEncoding(rawValue: sender.tag) else { return }
+        var config = PHTVInputMethodPreferences.currentConfiguration()
+        config.outputEncoding = encoding
+        PHTVInputMethodPreferences.saveConfiguration(config)
+    }
+
+    @objc private func openPreferences(_ sender: NSMenuItem) {
+        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.phamhungtien.phtv") {
+            let config = NSWorkspace.OpenConfiguration()
+            NSWorkspace.shared.openApplication(at: url, configuration: config)
+        } else {
+            NSWorkspace.shared.launchApplication("PHTV")
+        }
+    }
 }

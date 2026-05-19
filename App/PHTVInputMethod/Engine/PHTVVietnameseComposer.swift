@@ -23,7 +23,7 @@ struct PHTVVietnameseComposer {
             // tone key (e.g. the "s" in "sai") would be silently consumed, turning
             // "sai" into "ái".
             let hasVowelBefore = characters[0..<toneIndex].contains {
-                PHTVVietnameseToneTable.contains($0)
+                PHTVVietnameseToneTable.contains($0) || $0.lowercased() == "w"
             }
             if hasVowelBefore {
                 tone = PHTVTelexMarker.tone(for: characters[toneIndex])
@@ -195,19 +195,33 @@ struct PHTVVietnameseComposer {
         let vowelRuns = vowelRuns(in: characters)
         guard let run = vowelRuns.last else { return nil }
 
-        // Scan right-to-left so that in diphthongs where both vowels carry a
+        // Adjust active run to handle initial consonants "gi" and "qu" where
+        // the "i" or "u" is part of the consonant, not the active vowel run.
+        var activeRun = run
+        if run.count > 1 {
+            let firstIndex = run[0]
+            let firstChar = characters[firstIndex].lowercased()
+            if firstIndex > 0 {
+                let prevChar = characters[firstIndex - 1].lowercased()
+                if (firstChar == "i" && prevChar == "g") || (firstChar == "u" && prevChar == "q") {
+                    activeRun = Array(run[1...])
+                }
+            }
+        }
+
+        // Scan right-to-left in the active run so that in diphthongs where both vowels carry a
         // shape mark (e.g. "ươ"), the rightmost marked base wins. This gives the
         // correct placement for "huowsng" → "hướng" (acute on ơ, not on ư).
-        for index in run.reversed() where PHTVVietnameseToneTable.isMarkedBase(characters[index]) {
+        for index in activeRun.reversed() where PHTVVietnameseToneTable.isMarkedBase(characters[index]) {
             return index
         }
 
-        let runText = run.map { characters[$0].lowercased() }.joined()
-        if runText.hasPrefix("oa") || runText.hasPrefix("oe") || runText.hasPrefix("uy") {
-            return run.first
+        let activeRunText = activeRun.map { characters[$0].lowercased() }.joined()
+        if activeRunText.hasPrefix("oa") || activeRunText.hasPrefix("oe") || activeRunText.hasPrefix("uy") {
+            return activeRun.count > 1 ? activeRun[1] : activeRun.first
         }
 
-        return run.first
+        return activeRun.first
     }
 
     private func vowelRuns(in characters: [Character]) -> [[Int]] {
