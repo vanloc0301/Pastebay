@@ -124,11 +124,8 @@ final class PHTVInputController: IMKInputController {
     }
 
     @objc private func openPreferences(_ sender: NSMenuItem) {
-        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.phamhungtien.phtv") {
-            let config = NSWorkspace.OpenConfiguration()
-            NSWorkspace.shared.openApplication(at: url, configuration: config)
-        } else {
-            NSWorkspace.shared.launchApplication("PHTV")
+        DispatchQueue.main.async {
+            PHTVSettingsWindowController.shared.displayWindow()
         }
     }
 }

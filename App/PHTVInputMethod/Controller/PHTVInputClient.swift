@@ -25,8 +25,7 @@ struct PHTVInputClient {
         let attributedText = NSAttributedString(
             string: text,
             attributes: [
-                .underlineStyle: NSUnderlineStyle.single.rawValue,
-                .underlineColor: NSColor.secondaryLabelColor,
+                .underlineStyle: 0
             ]
         )
 
