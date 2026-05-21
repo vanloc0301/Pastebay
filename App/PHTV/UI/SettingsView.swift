@@ -47,6 +47,12 @@ struct SettingsView: View {
                 await observeTabSelectionNotification(named: NotificationName.showMacroTab, tab: .macro)
             }
             .task {
+                await observeTabSelectionNotification(
+                    named: NotificationName.showKeyboardCleaningTab,
+                    tab: .keyboardCleaning
+                )
+            }
+            .task {
                 await observeConvertToolRequests()
             }
     }
@@ -163,6 +169,8 @@ struct SettingsView: View {
                 PHTVPickerSettingsView()
             } else if selectedTab == .clipboardHistory {
                 ClipboardHistorySettingsView()
+            } else if selectedTab == .keyboardCleaning {
+                KeyboardCleaningSettingsView()
             } else if selectedTab == .hotkeys {
                 HotkeySettingsView()
             } else if selectedTab == .macro {

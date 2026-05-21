@@ -50,4 +50,5 @@ Useful maintenance modes:
 ## Notes
 
 - Release, Homebrew sync, and local shell helpers were removed from `scripts/` because the logic now runs in GitHub Actions.
-- Application runtime/source code remains Swift-first; this folder keeps only the dictionary generation tool.
+- The experimental InputMethodKit installer was removed with the `PHTVInputMethod` target.
+- Application runtime/source code remains Swift-first; this folder keeps the local dev entrypoint and dictionary generation tool.

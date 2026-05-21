@@ -320,6 +320,10 @@ final class PHTVEventCallbackService {
             return Unmanaged.passRetained(event)
         }
 
+        if PHTVKeyboardCleaningService.shouldBlockKeyboardEvent(type: type) {
+            return nil
+        }
+
         // Perform periodic health check and recovery.
         let tapHealthOk = PHTVEventTapHealthService.checkAndRecover(forEventType: type)
         _ = tapHealthOk

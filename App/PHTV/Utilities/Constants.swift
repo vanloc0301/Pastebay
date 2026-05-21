@@ -101,6 +101,7 @@ enum UserDefaultsKey {
     static let convertToolHotKey = "convertToolHotKey"
     static let convertToolFromCode = "convertToolFromCode"
     static let convertToolToCode = "convertToolToCode"
+    static let keyboardCleaningDuration = "PHTV_KeyboardCleaningDuration"
 
     // MARK: - Hotkey Settings
     static let switchKeyStatus = "SwitchKeyStatus"
@@ -185,6 +186,7 @@ enum NotificationName {
     static let menuBarIconPreferenceChanged = NSNotification.Name("MenuBarIconPreferenceChanged")
     static let showAboutTab = NSNotification.Name("ShowAboutTab")
     static let showMacroTab = NSNotification.Name("ShowMacroTab")
+    static let showKeyboardCleaningTab = NSNotification.Name("ShowKeyboardCleaningTab")
     static let showOnboarding = NSNotification.Name("ShowOnboarding")
     static let showConvertToolSheet = NSNotification.Name("ShowConvertToolSheet")
     static let openConvertToolSheet = NSNotification.Name("OpenConvertToolSheet")
@@ -200,6 +202,7 @@ enum NotificationName {
     static let sparkleInstallUpdate = NSNotification.Name("SparkleInstallUpdate")
     static let sparkleUpdateFound = NSNotification.Name("SparkleUpdateFound")
     static let sparkleNoUpdateFound = NSNotification.Name("SparkleNoUpdateFound")
+    static let keyboardCleaningStateChanged = NSNotification.Name("KeyboardCleaningStateChanged")
 }
 
 // MARK: - Notification UserInfo Keys
@@ -470,6 +473,7 @@ enum Defaults {
     static let convertToolDontAlertWhenCompleted = false
     static let convertToolFromCode = CodeTable.tcvn.toIndex()
     static let convertToolToCode = CodeTable.unicode.toIndex()
+    static let keyboardCleaningDuration = 60.0
 
     // MARK: - Hotkey
     static let switchKeyControl = true
@@ -700,6 +704,7 @@ final class SettingsBootstrap: NSObject {
             UserDefaultsKey.convertToolDontAlertWhenCompleted: Defaults.convertToolDontAlertWhenCompleted,
             UserDefaultsKey.convertToolFromCode: Defaults.convertToolFromCode,
             UserDefaultsKey.convertToolToCode: Defaults.convertToolToCode,
+            UserDefaultsKey.keyboardCleaningDuration: Defaults.keyboardCleaningDuration,
             UserDefaultsKey.enableClipboardHistory: Defaults.enableClipboardHistory,
             UserDefaultsKey.clipboardHotkeyModifiers: Int(Defaults.clipboardHotkeyModifiers),
             UserDefaultsKey.clipboardHotkeyKeyCode: Int(Defaults.clipboardHotkeyKeyCode),

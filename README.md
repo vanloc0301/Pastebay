@@ -16,7 +16,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/PhamHungTien/PHTV)](../../stargazers)
 [![Sponsor](https://img.shields.io/badge/❤️_Sponsor-PHTV-ea4aaa?style=flat&logo=github-sponsors)](https://phamhungtien.com/PHTV/#donate)
 
-[**Tải về**](https://phamhungtien.com/PHTV/) | [**Tài liệu**](docs/INSTALL.md) | [**Báo lỗi**](../../issues) | [**FAQ**](docs/FAQ.md) | [**☕ Ủng hộ**](https://phamhungtien.com/PHTV/#donate)
+[**Tải về**](https://phamhungtien.com/PHTV/) | [**Tài liệu**](docs/INSTALL.md) | [**Báo lỗi**](https://github.com/PhamHungTien/PHTV/issues) | [**FAQ**](docs/FAQ.md) | [**Ủng hộ**](https://phamhungtien.com/PHTV/#donate)
 
 </div>
 
@@ -24,9 +24,9 @@
 
 ## Giới thiệu
 
-**PHTV (Precision Hybrid Typing Vietnamese)** là bộ gõ tiếng Việt **offline, nhanh, và riêng tư** cho macOS 14+. Được phát triển hoàn toàn bằng Swift/SwiftUI, mang đến trải nghiệm gõ tiếng Việt mượt mà và tích hợp sâu vào hệ thống.
+**PHTV (Precision Hybrid Typing Vietnamese)** là bộ gõ tiếng Việt **offline, nhanh, và riêng tư** cho macOS 14+. Ứng dụng chạy như một menu bar app native bằng Swift/SwiftUI, bắt phím bằng CGEvent tap và xử lý tiếng Việt trực tiếp trên máy.
 
-✨ **Tự động cập nhật** - Nhận phiên bản mới ngay khi ra mắt với Sparkle framework. Không cần tải lại thủ công!
+**Tự động cập nhật** - Nhận phiên bản mới ngay khi ra mắt với Sparkle framework. Không cần tải lại thủ công.
 
 ## 🚀 Quick Start
 
@@ -38,13 +38,24 @@ brew install --cask phamhungtien/tap/phtv
 open /Applications/PHTV.app
 ```
 
-**⚠️ Quan trọng:** Trước khi sử dụng, bạn **phải tắt các tính năng tự động sửa lỗi của macOS** (Correct spelling, Capitalize words,...) trong *System Settings → Keyboard → Edit Input Sources* để tránh xung đột. Xem [hướng dẫn chi tiết tại đây](docs/INSTALL.md#️-chuẩn-bị-trước-khi-cài-đặt).
+**Quan trọng:** Trước khi sử dụng, bạn nên tắt các tính năng tự động sửa lỗi của macOS (Correct spelling, Capitalize words, inline predictive text,...) trong **System Settings > Keyboard > Edit Input Sources** để tránh xung đột. Xem [hướng dẫn chi tiết](docs/INSTALL.md#chuẩn-bị-trước-khi-cài-đặt).
 
 **Sau khi cài:**
-1. Cho phép quyền **Accessibility** trong System Settings
-2. Click icon **En** trên menu bar → chọn **Vi** để bật tiếng Việt
-3. Nhấn **Control + Shift** để chuyển đổi Việt/Anh (tùy chỉnh trong Settings)
-4. Bắt đầu gõ! 🎉
+1. Mở PHTV và cấp đủ 2 quyền: **Accessibility** và **Input Monitoring**.
+2. Click icon **En** trên menu bar, chọn **Vi** để bật tiếng Việt.
+3. Nhấn **Control + Shift** để chuyển đổi Việt/Anh (có thể tùy chỉnh trong Settings).
+4. Bắt đầu gõ.
+
+## Quyền & Riêng tư
+
+PHTV cần 2 quyền của macOS để hoạt động ổn định:
+
+| Quyền | Dùng để làm gì |
+| --- | --- |
+| **Accessibility** | Tương tác với ô nhập liệu, đọc ngữ cảnh cần thiết và commit chữ đã xử lý. |
+| **Input Monitoring** | Nhận phím gõ từ macOS để engine có thể xử lý Telex/VNI trước khi gửi lại ứng dụng đích. |
+
+PHTV xử lý dữ liệu gõ **offline trên máy**. Ứng dụng không gửi nội dung bạn gõ ra máy chủ bên ngoài. Nếu macOS giữ một mục quyền cũ/hỏng, PHTV sẽ hướng dẫn cấp lại và làm mới entry TCC của quyền đang thiếu trước khi mở đúng mục System Settings.
 
 ## Tính năng
 
@@ -114,6 +125,7 @@ open /Applications/PHTV.app
 - **Tự động cập nhật (Sparkle)** - Kiểm tra và cập nhật phiên bản mới tự động từ GitHub với EdDSA signing bảo mật
 - **Import/Export cài đặt** - Sao lưu và khôi phục toàn bộ settings
 - **Menu bar icon** - Hiển thị trạng thái Vi/En trên thanh menu
+- **Trạng thái quyền rõ ràng** - Nhận diện riêng Accessibility, Input Monitoring, event tap readiness và tự hướng dẫn phục hồi khi thiếu quyền
 - **Báo lỗi thông minh** - Tự động thu thập log debug, thống kê lỗi, gửi qua GitHub/Email
 
 ## Screenshots
@@ -191,7 +203,7 @@ open /Applications/PHTV.app
 brew install --cask phamhungtien/tap/phtv
 ```
 
-> 💡 **Tự động cập nhật**: Sau khi cài, PHTV sẽ tự động kiểm tra và thông báo khi có phiên bản mới. Không cần `brew upgrade` thủ công!
+> **Tự động cập nhật**: Sau khi cài, PHTV sẽ tự động kiểm tra và thông báo khi có phiên bản mới. Không cần `brew upgrade` thủ công.
 
 **Cập nhật thủ công qua Homebrew (nếu muốn):**
 ```bash
@@ -226,7 +238,7 @@ open PHTV.xcodeproj
 # Build với Cmd+B, chạy với Cmd+R
 ```
 
-> **Lưu ý**: Ứng dụng cần quyền **Accessibility** để hoạt động. Vào **System Settings > Privacy & Security > Accessibility** và thêm PHTV.
+Project hiện chỉ có app chính `PHTV` và test target `PHEngineTests`; không còn target InputMethodKit riêng. Khi chạy bản tự build, bạn vẫn cần cấp đủ **Accessibility** và **Input Monitoring** cho bundle vừa build.
 
 Xem chi tiết kiến trúc: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
@@ -281,7 +293,7 @@ Click biểu tượng **Vi** (Việt) / **En** (Anh) trên menu bar:
 | **macOS** | 14.0+ (Sonoma trở lên) |
 | **Kiến trúc** | Universal Binary (Intel + Apple Silicon) |
 | **Xcode** | Phiên bản mới nhất (nếu build từ source) |
-| **Quyền** | Accessibility |
+| **Quyền** | Accessibility + Input Monitoring |
 
 > **Lưu ý**: PHTV hỗ trợ cả Intel và Apple Silicon (M1/M2/M3/M4/...). Universal Binary cho mọi Mac chạy macOS 14.0+.
 
@@ -290,7 +302,8 @@ Click biểu tượng **Vi** (Việt) / **En** (Anh) trên menu bar:
 ### Core
 - **Swift 6.0** + **SwiftUI** - Giao diện native hiện đại, 100% Swift
 - **CGEvent API** - Event interception và xử lý bàn phím
-- **Accessibility API** - Hỗ trợ Spotlight và các app đặc biệt
+- **Accessibility API** - Tương tác với ô nhập liệu và hỗ trợ các app đặc biệt
+- **TCC monitoring** - Theo dõi, nhận diện và phục hồi trạng thái quyền macOS
 - **NSUserDefaults** - Lưu trữ cấu hình local
 
 ### Distribution & Updates
@@ -319,15 +332,15 @@ Mọi đóng góp đều được chào đón! Xem [CONTRIBUTING.md](CONTRIBUTIN
 
 **Các cách đóng góp:**
 
-- [Báo lỗi](../../issues/new?template=bug_report.md)
-- [Đề xuất tính năng](../../issues/new?template=feature_request.md)
+- [Báo lỗi](https://github.com/PhamHungTien/PHTV/issues/new?template=bug_report.md)
+- [Đề xuất tính năng](https://github.com/PhamHungTien/PHTV/issues/new?template=feature_request.md)
 - Gửi Pull Request
 - Cải thiện tài liệu
 
 ## Hỗ trợ & Liên hệ
 
 - Email: phamhungtien.contact@gmail.com
-- GitHub: [Issues](../../issues) | [Discussions](../../discussions)
+- GitHub: [Issues](https://github.com/PhamHungTien/PHTV/issues) | [Discussions](https://github.com/PhamHungTien/PHTV/discussions)
 - Website: [phamhungtien.com/PHTV](https://phamhungtien.com/PHTV/)
 - Facebook: [PHTVInput](https://www.facebook.com/PHTVInput)
 - LinkedIn: [Phạm Hùng Tiến](https://www.linkedin.com/in/ph%E1%BA%A1m-h%C3%B9ng-ti%E1%BA%BFn-a1b405327/)

@@ -328,6 +328,11 @@ final class StatusBarMenuManager: NSObject, NSMenuDelegate {
 
         m.addItem(.separator())
         m.addItem(actionItem("Chuyển đổi bảng mã...", image: "arrow.triangle.2.circlepath", sel: #selector(openConvertTool)))
+        m.addItem(actionItem("Lau bàn phím...", image: "keyboard.badge.eye", sel: #selector(openKeyboardCleaning)))
+
+        if PHTVKeyboardCleaningService.isCleaningActive() {
+            m.addItem(actionItem("Dừng lau bàn phím", image: "stop.circle", sel: #selector(stopKeyboardCleaning)))
+        }
 
         return m
     }
@@ -427,6 +432,19 @@ final class StatusBarMenuManager: NSObject, NSMenuDelegate {
             guard !Task.isCancelled else { return }
             NotificationCenter.default.post(name: NotificationName.showConvertToolSheet, object: nil)
         }
+    }
+
+    @objc private func openKeyboardCleaning() {
+        SettingsWindowOpener.requestOpenWindow()
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(250))
+            guard !Task.isCancelled else { return }
+            NotificationCenter.default.post(name: NotificationName.showKeyboardCleaningTab, object: nil)
+        }
+    }
+
+    @objc private func stopKeyboardCleaning() {
+        PHTVKeyboardCleaningService.stopCleaning()
     }
 
     private func quickConvert(from source: Int, to target: Int) {

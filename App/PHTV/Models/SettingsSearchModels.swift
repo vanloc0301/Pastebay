@@ -113,6 +113,13 @@ struct SettingsItem: Identifiable {
             keywords: ["clipboard", "max items", "số mục", "lưu", "history", "100", "30"]),
 
         // ═══════════════════════════════════════════
+        // MARK: - Lau bàn phím
+        // ═══════════════════════════════════════════
+        SettingsItem(
+            title: "Lau bàn phím", iconName: "keyboard.badge.eye", tab: .keyboardCleaning,
+            keywords: ["clean keyboard", "cleanmykeyboard", "lau bàn phím", "khóa phím", "vệ sinh", "keyboard lock"]),
+
+        // ═══════════════════════════════════════════
         // MARK: - Ứng dụng (Apps)
         // ═══════════════════════════════════════════
         SettingsItem(
@@ -208,6 +215,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
     case typing = "Bộ gõ"
     case phtvPicker = "PHTV Picker"
     case clipboardHistory = "Lịch sử Clipboard"
+    case keyboardCleaning = "Lau bàn phím"
     case hotkeys = "Phím tắt"
     case macro = "Gõ tắt"
     case apps = "Ứng dụng"
@@ -223,6 +231,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
         case .typing: return "keyboard"
         case .phtvPicker: return "smiley"
         case .clipboardHistory: return "doc.on.clipboard"
+        case .keyboardCleaning: return "keyboard.badge.eye"
         case .hotkeys: return "command"
         case .macro: return "text.badge.checkmark"
         case .apps: return "square.stack.3d.up"
@@ -248,7 +257,7 @@ enum SettingsTabSection: String, CaseIterable, Identifiable {
         case .typing:
             return [.typing, .hotkeys, .macro, .apps, .phtvPicker, .clipboardHistory]
         case .system:
-            return [.system]
+            return [.keyboardCleaning, .system]
         case .support:
             return [.bugReport, .about]
         }
