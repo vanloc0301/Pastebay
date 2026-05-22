@@ -1,4 +1,4 @@
-# Pastebay release artifact workflow
+# Pastebay release workflow
 
 name: Release
 
@@ -10,14 +10,14 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build-release:
-    name: Build Release Artifact
+    name: Build Release DMG
     runs-on: macos-26
 
     steps:
@@ -46,27 +46,34 @@ jobs:
             DEVELOPMENT_TEAM="" \
             | tee "$RUNNER_TEMP/pastebay-release-build.log"
 
-      - name: Package Pastebay.app
+      - name: Package Pastebay.dmg
         run: |
           set -euo pipefail
           APP_PATH="$RUNNER_TEMP/pastebay-derived-data/Build/Products/Release/Pastebay.app"
           OUT_DIR="$RUNNER_TEMP/pastebay-release"
           SHORT_SHA="${GITHUB_SHA:0:7}"
-          ZIP_PATH="$OUT_DIR/Pastebay-macOS-$SHORT_SHA.zip"
+          DMG_PATH="$OUT_DIR/Pastebay-macOS-$SHORT_SHA.dmg"
 
           test -d "$APP_PATH"
           mkdir -p "$OUT_DIR"
-          ditto -c -k --keepParent "$APP_PATH" "$ZIP_PATH"
-          shasum -a 256 "$ZIP_PATH" > "$OUT_DIR/Pastebay-macOS-$SHORT_SHA.zip.sha256"
 
-      - name: Upload app artifact
-        uses: actions/upload-artifact@v6
+          hdiutil create \
+            -volname "Pastebay" \
+            -srcfolder "$APP_PATH" \
+            -ov \
+            -format UDZO \
+            "$DMG_PATH"
+
+          shasum -a 256 "$DMG_PATH" > "$DMG_PATH.sha256"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: Pastebay-macOS
-          path: |
-            ${{ runner.temp }}/pastebay-release/Pastebay-macOS-*.zip
-            ${{ runner.temp }}/pastebay-release/Pastebay-macOS-*.zip.sha256
-          retention-days: 30
+          tag_name: pastebay-${{ github.run_number }}
+          name: Pastebay ${{ github.run_number }}
+          files: |
+            ${{ runner.temp }}/pastebay-release/Pastebay-macOS-*.dmg
+            ${{ runner.temp }}/pastebay-release/Pastebay-macOS-*.dmg.sha256
 
       - name: Upload build log
         if: always()
