@@ -454,10 +454,10 @@ enum Defaults {
     static let pauseKeyName = "Option"
 
     // MARK: - Clipboard History
-    static let enableClipboardHistory = false
+    static let enableClipboardHistory = true
     static let clipboardHotkeyModifiers = NSEvent.ModifierFlags.control.rawValue
     static let clipboardHotkeyKeyCode = KeyCode.vKey
-    static let clipboardHistoryMaxItems = 30
+    static let clipboardHistoryMaxItems = 500
 
     // MARK: - Emoji Hotkey
     static let enableEmojiHotkey = true

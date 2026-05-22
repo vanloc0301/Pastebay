@@ -12,7 +12,7 @@ import Carbon
 
 enum ClipboardHistoryStoragePolicy {
     static let minimumItems = 10
-    static let maximumItems = 100
+    static let maximumItems = 500
 
     static func clampedMaxItems(_ value: Int) -> Int {
         min(max(value, minimumItems), maximumItems)

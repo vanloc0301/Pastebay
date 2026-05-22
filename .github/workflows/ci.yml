@@ -5,6 +5,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -64,7 +65,7 @@ jobs:
             DEVELOPMENT_TEAM="" \
             | tee build.log
 
-      - name: Run Engine Regression Tests
+      - name: Run Clipboard History Tests
         run: |
           set -euo pipefail
           DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-$PWD/.build/derived-data}"
@@ -72,7 +73,7 @@ jobs:
 
           pkill -x PHTV >/dev/null 2>&1 || true
 
-          run_engine_tests() {
+          run_clipboard_tests() {
             xcodebuild \
               -project App/PHTV.xcodeproj \
               -scheme PHTV \
@@ -85,65 +86,22 @@ jobs:
               CODE_SIGNING_ALLOWED=NO \
               DEVELOPMENT_TEAM="" \
               test \
-              -only-testing:PHEngineTests/EngineRegressionTests
+              -only-testing:PHEngineTests/ClipboardHistoryLogicTests
           }
 
           attempt=1
-          until run_engine_tests; do
+          until run_clipboard_tests; do
             if [ "$attempt" -ge 3 ]; then
-              echo "Engine regression tests failed after $attempt attempts"
+              echo "Clipboard History tests failed after $attempt attempts"
               exit 1
             fi
             attempt=$((attempt + 1))
-            echo "Retrying engine regression tests (attempt $attempt/3)..."
+            echo "Retrying Clipboard History tests (attempt $attempt/3)..."
             pkill -x PHTV >/dev/null 2>&1 || true
             sleep 1
           done
 
           pkill -x PHTV >/dev/null 2>&1 || true
-
-      - name: Run Hotkey Smoke Tests (Clean Defaults)
-        run: |
-          set -euo pipefail
-          DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-$PWD/.build/derived-data}"
-          DESTINATION="${PHTV_TEST_DESTINATION:-platform=macOS}"
-          DEFAULTS_DOMAIN="com.phamhungtien.phtv"
-
-          pkill -x PHTV >/dev/null 2>&1 || true
-          defaults delete "$DEFAULTS_DOMAIN" >/dev/null 2>&1 || true
-
-          run_hotkey_smoke_tests() {
-            xcodebuild \
-              -project App/PHTV.xcodeproj \
-              -scheme PHTV \
-              -configuration Debug \
-              -destination "$DESTINATION" \
-              -derivedDataPath "$DERIVED_DATA_PATH" \
-              -skipPackagePluginValidation \
-              CODE_SIGN_IDENTITY="-" \
-              CODE_SIGNING_REQUIRED=NO \
-              CODE_SIGNING_ALLOWED=NO \
-              DEVELOPMENT_TEAM="" \
-              -parallel-testing-enabled NO \
-              test \
-              -only-testing:PHEngineTests/HotkeyReliabilityTests
-          }
-
-          attempt=1
-          until run_hotkey_smoke_tests; do
-            if [ "$attempt" -ge 3 ]; then
-              echo "Hotkey smoke tests failed after $attempt attempts"
-              exit 1
-            fi
-            attempt=$((attempt + 1))
-            echo "Retrying hotkey smoke tests (attempt $attempt/3)..."
-            pkill -x PHTV >/dev/null 2>&1 || true
-            defaults delete "$DEFAULTS_DOMAIN" >/dev/null 2>&1 || true
-            sleep 1
-          done
-
-          pkill -x PHTV >/dev/null 2>&1 || true
-          defaults delete "$DEFAULTS_DOMAIN" >/dev/null 2>&1 || true
 
       - name: Upload build log
         if: always()

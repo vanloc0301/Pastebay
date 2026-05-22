@@ -106,7 +106,9 @@ final class ClipboardHistoryState {
             default: Defaults.clipboardHistoryMaxItems
         )
         if clipboardHistoryMaxItems < 10 { clipboardHistoryMaxItems = 10 }
-        if clipboardHistoryMaxItems > 100 { clipboardHistoryMaxItems = 100 }
+        if clipboardHistoryMaxItems > ClipboardHistoryStoragePolicy.maximumItems {
+            clipboardHistoryMaxItems = ClipboardHistoryStoragePolicy.maximumItems
+        }
     }
 
     func saveSettings() {

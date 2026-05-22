@@ -51,7 +51,7 @@ func phtvIsRunningUnderXCTest() -> Bool {
 @MainActor @objc extension AppDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         _ = notification
-        NSLog("🔴🔴🔴 [AppDelegate] applicationDidFinishLaunching STARTED 🔴🔴🔴")
+        NSLog("[AppDelegate] Clipboard History app launch started")
 
         lastInputMethod = -1
         lastCodeTable = -1
@@ -78,21 +78,6 @@ func phtvIsRunningUnderXCTest() -> Bool {
 
         let defaults = UserDefaults.standard
         let isFirstLaunch = !defaults.bool(forKey: phtvDefaultsKeyNonFirstTime)
-        let axTrustedAtLaunch = AXIsProcessTrusted()
-        let inputMonitoringTrustedAtLaunch = PHTVPermissionService.hasInputMonitoringPermission()
-        needsRelaunchAfterPermission = !(axTrustedAtLaunch && inputMonitoringTrustedAtLaunch)
-        if needsRelaunchAfterPermission {
-            NSLog(
-                "[Accessibility] App launched before required TCC trust; will relaunch after grant (AX=%@, Input=%@)",
-                axTrustedAtLaunch ? "YES" : "NO",
-                inputMonitoringTrustedAtLaunch ? "YES" : "NO"
-            )
-        }
-
-        // Set up NSStatusItem + NSMenu (replaces SwiftUI MenuBarExtra for proper submenu hover).
-        StatusBarMenuManager.shared.setup()
-
-        registerSupportedNotification()
 
         defaults.set(50, forKey: phtvDefaultsKeyInitialToolTipDelay)
 
@@ -109,26 +94,12 @@ func phtvIsRunningUnderXCTest() -> Bool {
         NSApp.setActivationPolicy(showDockIcon ? .regular : .accessory)
 
         setupSwiftUIBridge()
-        bootstrapSparkleUpdates()
 
-        loadExistingMacros()
-        for delay in [0.6, 1.8] {
-            Task { @MainActor [weak self] in
-                try? await Task.sleep(for: .seconds(delay))
-                guard let self, !Task.isCancelled else { return }
-                self.refreshMacrosIfSystemTextReplacementsChanged(resetSession: true)
-            }
-        }
-        initEnglishWordDictionary()
-        loadRuntimeSettingsFromUserDefaults()
-        EmojiHotkeyBridge.initializeEmojiHotkeyManager()
-        for delay in [0.0, 0.25, 0.8] {
-            Task { @MainActor in
-                try? await Task.sleep(for: .seconds(delay))
-                guard !Task.isCancelled else { return }
-                EmojiHotkeyBridge.refreshEmojiHotkeyRegistration()
-            }
-        }
+        // Clipboard-only build: keep the status item, settings bridge, clipboard hotkey,
+        // and Accessibility prompt. All typing engine, macro, picker, updater, and
+        // compatibility runtimes are intentionally left inactive.
+        StatusBarMenuManager.shared.setup()
+        registerSupportedNotification()
         ClipboardHotkeyBridge.initializeClipboardHotkeyManager()
         for delay in [0.0, 0.25, 0.8] {
             Task { @MainActor in
@@ -137,66 +108,15 @@ func phtvIsRunningUnderXCTest() -> Bool {
                 ClipboardHotkeyBridge.refreshClipboardHotkeyRegistration()
             }
         }
-        runHotkeyHealthCheck(reason: "launch-bootstrap")
 
-        observeAppearanceChanges()
-
-        Task.detached(priority: .utility) {
-            let binaryIntact = PHTVBinaryIntegrityService.checkBinaryIntegrity()
-            if !binaryIntact {
-                NSLog("⚠️⚠️⚠️ [AppDelegate] Binary integrity check FAILED - may cause permission issues")
-            }
-        }
-
-        PHTVManager.startTCCNotificationListener()
-        NSLog("[TCC] Notification listener started at app launch")
-
-        if !axTrustedAtLaunch || !inputMonitoringTrustedAtLaunch {
-            runHotkeyHealthCheck(reason: "launch-missing-typing-permission")
-            publishTypingPermissionState(eventTapReady: false)
-            askPermission()
-            attemptAutomaticTCCRepairIfNeeded()
-            startAccessibilityMonitoring()
-            stopHealthCheckMonitoring()
-            return
-        }
-
-        Task { @MainActor [weak self] in
-            await Task.yield()
-            guard let self else {
-                return
-            }
-
-            if !PHTVManager.initEventTap() {
-                self.publishTypingPermissionState(eventTapReady: false)
-                self.startAccessibilityMonitoring(withInterval: 1.0, resetState: false)
-                self.startHealthCheckMonitoring()
-                NotificationCenter.default.post(name: phtvNotificationShowSettings, object: nil)
-            } else {
-                NSLog("[EventTap] Initialized successfully")
-                self.startAccessibilityMonitoring()
-                self.startHealthCheckMonitoring()
-                self.startInputSourceMonitoring()
-                EmojiHotkeyBridge.refreshEmojiHotkeyRegistration()
-                ClipboardHotkeyBridge.refreshClipboardHotkeyRegistration()
-                self.publishTypingPermissionState(eventTapReady: true)
-                self.syncCurrentFrontmostAppContext(reason: "launch", forceExcludedRecheck: true)
-
-                let showUI = UserDefaults.standard.integer(forKey: phtvDefaultsKeyShowUIOnStartup)
-                if showUI == 1 {
-                    NotificationCenter.default.post(name: phtvNotificationShowSettings, object: nil)
-                }
-            }
-
-            self.runHotkeyHealthCheck(reason: "launch-after-eventtap-init")
-            self.requestEventTapRecovery(reason: "launch", force: true)
-            self.setQuickConvertString()
+        if !AXIsProcessTrusted() {
+            NotificationCenter.default.post(name: phtvNotificationShowSettings, object: nil)
+            PHTVAccessibilityService.requestAccessibilityPrompt()
         }
 
         if isFirstLaunch {
-            loadDefaultConfig()
             defaults.set(1, forKey: phtvDefaultsKeyNonFirstTime)
-            NSLog("[AppDelegate] First launch: loaded default config and marked NonFirstTime")
+            NSLog("[AppDelegate] First launch: marked NonFirstTime")
         }
 
         syncRunOnStartupStatus(withFirstLaunch: isFirstLaunch)

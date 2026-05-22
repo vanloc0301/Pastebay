@@ -194,16 +194,16 @@ struct ClipboardHotkeyConfigView: View {
                             get: { Double(appState.clipboardHistoryMaxItems) },
                             set: { appState.clipboardHistoryMaxItems = Int($0) }
                         ),
-                        in: 10...100,
+                        in: Double(ClipboardHistoryStoragePolicy.minimumItems)...Double(ClipboardHistoryStoragePolicy.maximumItems),
                         step: 10
                     )
 
                     HStack {
-                        Text("10")
+                        Text("\(ClipboardHistoryStoragePolicy.minimumItems)")
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                         Spacer()
-                        Text("100")
+                        Text("\(ClipboardHistoryStoragePolicy.maximumItems)")
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                     }

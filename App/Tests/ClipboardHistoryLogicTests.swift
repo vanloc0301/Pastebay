@@ -58,7 +58,8 @@ final class ClipboardHistoryLogicTests: XCTestCase {
 
     func testClampedMaxItemsStaysWithinAllowedRange() {
         XCTAssertEqual(ClipboardHistoryStoragePolicy.clampedMaxItems(1), 10)
-        XCTAssertEqual(ClipboardHistoryStoragePolicy.clampedMaxItems(250), 100)
+        XCTAssertEqual(ClipboardHistoryStoragePolicy.clampedMaxItems(250), 250)
+        XCTAssertEqual(ClipboardHistoryStoragePolicy.clampedMaxItems(501), 500)
     }
 
     func testSensitiveAppsAreExcludedFromCapture() {

@@ -11,8 +11,7 @@ import SwiftUI
 // MARK: - Main Settings View
 struct SettingsView: View {
     @Environment(AppState.self) private var appState
-    @State private var selectedTab: SettingsTab = .typing
-    @State private var lastTab: SettingsTab = .typing
+    @State private var selectedTab: SettingsTab = .clipboardHistory
     @State private var searchText: String = ""
 
     private var filteredSettings: [SettingsItem] {
@@ -32,28 +31,6 @@ struct SettingsView: View {
                 let appDelegate = AppDelegate.current()
                 NSLog("[SettingsView] onChange - showIconOnDock changed to %@", newValue ? "true" : "false")
                 appDelegate?.showIcon(newValue)  // This one saves to UserDefaults
-            }
-            .onChange(of: selectedTab) { _, newValue in
-                // Release cached app icons when leaving icon-heavy tabs.
-                if lastTab == .apps || lastTab == .typing {
-                    AppIconCache.shared.clear()
-                }
-                lastTab = newValue
-            }
-            .task {
-                await observeTabSelectionNotification(named: NotificationName.showAboutTab, tab: .about)
-            }
-            .task {
-                await observeTabSelectionNotification(named: NotificationName.showMacroTab, tab: .macro)
-            }
-            .task {
-                await observeTabSelectionNotification(
-                    named: NotificationName.showKeyboardCleaningTab,
-                    tab: .keyboardCleaning
-                )
-            }
-            .task {
-                await observeConvertToolRequests()
             }
     }
 
@@ -106,7 +83,7 @@ struct SettingsView: View {
         let list = List(selection: $selectedTab) {
             if searchText.isEmpty {
                 // Normal tab list grouped by section
-                ForEach(SettingsTabSection.allCases) { section in
+                ForEach(SettingsTabSection.allCases.filter { !$0.tabs.isEmpty }) { section in
                     Section(section.title) {
                         ForEach(section.tabs) { tab in
                             SettingsSidebarRow(tab: tab)
@@ -163,26 +140,12 @@ struct SettingsView: View {
     private var detailView: some View {
         // Lazy loading: Only create the view for selected tab.
         Group {
-            if selectedTab == .typing {
-                TypingSettingsView()
-            } else if selectedTab == .phtvPicker {
-                PHTVPickerSettingsView()
-            } else if selectedTab == .clipboardHistory {
+            if selectedTab == .clipboardHistory {
                 ClipboardHistorySettingsView()
-            } else if selectedTab == .keyboardCleaning {
-                KeyboardCleaningSettingsView()
-            } else if selectedTab == .hotkeys {
-                HotkeySettingsView()
-            } else if selectedTab == .macro {
-                MacroSettingsView()
-            } else if selectedTab == .apps {
-                AppsSettingsView()
             } else if selectedTab == .system {
                 SystemSettingsView()
-            } else if selectedTab == .bugReport {
-                BugReportView()
-            } else if selectedTab == .about {
-                AboutView()
+            } else {
+                ClipboardHistorySettingsView()
             }
         }
         // Avoid forced teardown to reduce peak allocations on tab switch.

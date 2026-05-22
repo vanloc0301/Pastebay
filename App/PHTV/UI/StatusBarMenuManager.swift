@@ -11,6 +11,7 @@
 //
 
 import AppKit
+import ApplicationServices
 
 @MainActor
 final class StatusBarMenuManager: NSObject, NSMenuDelegate {
@@ -74,8 +75,7 @@ final class StatusBarMenuManager: NSObject, NSMenuDelegate {
     }
 
     private func resolvedIconName() -> String {
-        if !appState.isEnabled { return "menubar_english" }
-        return appState.useVietnameseMenubarIcon ? "menubar_vietnamese" : "menubar_icon"
+        return "menubar_icon"
     }
 
     private func resolvedIconSize() -> CGFloat {
@@ -112,17 +112,17 @@ final class StatusBarMenuManager: NSObject, NSMenuDelegate {
     // MARK: - Menu Structure
 
     private func populate(_ menu: NSMenu) {
-        addLanguagePicker(to: menu)
-        menu.addItem(.separator())
-
-        menu.addItem(submenu("Bộ gõ", image: "keyboard.fill", build: buildBoGoMenu))
-        menu.addItem(submenu("Tính năng", image: "star.fill", build: buildTinhNangMenu))
-        menu.addItem(submenu("Tương thích", image: "wrench.and.screwdriver.fill", build: buildTuongThichMenu))
-        menu.addItem(submenu("Hệ thống", image: "gearshape.fill", build: buildHeThongMenu))
+        sectionHeader("Clipboard History", in: menu)
+        menu.addItem(closureToggle("Bật lịch sử Clipboard", image: "doc.on.clipboard.fill", on: appState.enableClipboardHistory) {
+            AppState.shared.enableClipboardHistory.toggle()
+        })
+        menu.addItem(actionItem("Mở Clipboard History", image: "doc.on.clipboard", sel: #selector(openClipboardHistory)))
 
         menu.addItem(.separator())
 
-        menu.addItem(submenu("Công cụ", image: "hammer.fill", build: buildCongCuMenu))
+        let accessibilityTitle = AXIsProcessTrusted() ? "Đã cấp quyền Trợ năng" : "Cấp quyền Trợ năng"
+        let accessibilityIcon = AXIsProcessTrusted() ? "checkmark.shield" : "exclamationmark.shield"
+        menu.addItem(actionItem(accessibilityTitle, image: accessibilityIcon, sel: #selector(openAccessibilityPrefs)))
 
         menu.addItem(.separator())
 
@@ -133,10 +133,6 @@ final class StatusBarMenuManager: NSObject, NSMenuDelegate {
         menu.addItem(settingsItem)
 
         menu.addItem(.separator())
-
-        let version = PHTVBuildInfo.displayVersion
-        menu.addItem(actionItem("Về PHTV v\(version)", image: "info.circle", sel: #selector(openAbout)))
-        menu.addItem(actionItem("Kiểm tra cập nhật", image: "arrow.down.circle", sel: #selector(checkUpdates)))
 
         let quitItem = NSMenuItem(title: "Thoát PHTV", action: #selector(quitApp), keyEquivalent: "q")
         quitItem.keyEquivalentModifierMask = .command
@@ -422,7 +418,11 @@ final class StatusBarMenuManager: NSObject, NSMenuDelegate {
     }
 
     @objc private func openAccessibilityPrefs() {
-        AppDelegate.current()?.continuePermissionGuidanceIfNeeded(forceOpenSystemSettings: true)
+        PHTVAccessibilityService.openAccessibilityPreferences()
+    }
+
+    @objc private func openClipboardHistory() {
+        ClipboardHotkeyBridge.openClipboardHistory()
     }
 
     @objc private func openConvertTool() {

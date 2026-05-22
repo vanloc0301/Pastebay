@@ -248,6 +248,54 @@ struct SettingsDivider: View {
     }
 }
 
+struct SettingsButtonRow: View {
+    let icon: String
+    let iconColor: Color
+    let title: String
+    let subtitle: String
+    var isDestructive: Bool = false
+    var isLoading: Bool = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(alignment: .center, spacing: 12) {
+                if isLoading {
+                    ProgressView()
+                        .controlSize(.small)
+                        .frame(width: 24, height: 24)
+                        .tint(iconColor)
+                } else {
+                    Image(systemName: icon)
+                        .font(.system(size: 15, weight: .medium))
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(iconColor)
+                        .frame(width: 24, height: 24)
+                }
+
+                Text(title)
+                    .font(.body)
+                    .foregroundStyle(isDestructive ? .red : .primary)
+                    .lineLimit(1)
+
+                Spacer()
+
+                if !isLoading {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .padding(.vertical, SettingsLayout.rowVerticalPadding)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(isLoading)
+        .accessibilityLabel(Text(title))
+        .accessibilityHint(Text(subtitle))
+    }
+}
+
 // MARK: - Status Card
 
 struct StatusCard: View {
