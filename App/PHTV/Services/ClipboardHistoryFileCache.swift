@@ -14,7 +14,7 @@ enum ClipboardHistoryFileCache {
     private static var rootDirectoryURL: URL {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         return appSupport
-            .appendingPathComponent("PHTV", isDirectory: true)
+            .appendingPathComponent("Pastebay", isDirectory: true)
             .appendingPathComponent("ClipboardHistoryFiles", isDirectory: true)
     }
 

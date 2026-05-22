@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "460202422F2814250040B043"
-               BuildableName = "PHTV.app"
+               BuildableName = "Pastebay.app"
                BlueprintName = "PHTV"
                ReferencedContainer = "container:PHTV.xcodeproj">
             </BuildableReference>
@@ -29,8 +29,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "46020A032F3000000040B043"
-               BuildableName = "PHEngineTests.xctest"
-               BlueprintName = "PHEngineTests"
+               BuildableName = "PastebayTests.xctest"
+               BlueprintName = "PastebayTests"
                ReferencedContainer = "container:PHTV.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -46,12 +46,12 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Prepare isolated test home"
-               scriptText = "#!/bin/sh&#10;set -eu&#10;test_home=&quot;${PROJECT_TEMP_DIR:-${TMPDIR:-/tmp}}/PHTVTestHome&quot;&#10;user_name=&quot;${USER:-$(/usr/bin/id -un)}&quot;&#10;real_home=&quot;$(eval echo &quot;~$user_name&quot;)&quot;&#10;/bin/mkdir -p &quot;$test_home/Library/Preferences&quot; &quot;$test_home/Library/Application Support&quot; &quot;$test_home/Library/Caches&quot;&#10;/usr/bin/defaults delete com.phamhungtien.phtv.debug >/dev/null 2>&amp;1 || true&#10;/usr/bin/killall cfprefsd >/dev/null 2>&amp;1 || true&#10;/bin/sleep 0.2&#10;for prefs_dir in &quot;$HOME/Library/Preferences&quot; &quot;$real_home/Library/Preferences&quot;; do&#10;  /usr/bin/find &quot;$prefs_dir&quot; -maxdepth 1 -type f \( -name 'com.phamhungtien.phtv.debug*.plist' -o -name 'com.phamhungtien.phtv.debug*.plist.lockfile' -o -name 'com.phamhungtien.phtv.tests*.plist' -o -name 'com.phamhungtien.phtv.tests*.plist.lockfile' -o -name 'SystemTextReplacementServiceTests*.plist' -o -name 'SystemTextReplacementServiceTests*.plist.lockfile' \) -delete >/dev/null 2>&amp;1 || true&#10;done&#10;/usr/bin/osascript -e 'tell application id &quot;com.phamhungtien.phtv.debug&quot; to quit' >/dev/null 2>&amp;1 || true&#10;if [ -n &quot;${BUILT_PRODUCTS_DIR:-}&quot; ]; then&#10;  /usr/bin/pkill -f &quot;$BUILT_PRODUCTS_DIR/PHTV.app/Contents/MacOS/PHTV&quot; >/dev/null 2>&amp;1 || true&#10;fi">
+               scriptText = "#!/bin/sh&#10;set -eu&#10;test_home=&quot;${PROJECT_TEMP_DIR:-${TMPDIR:-/tmp}}/PastebayTestHome&quot;&#10;user_name=&quot;${USER:-$(/usr/bin/id -un)}&quot;&#10;real_home=&quot;$(eval echo &quot;~$user_name&quot;)&quot;&#10;/bin/mkdir -p &quot;$test_home/Library/Preferences&quot; &quot;$test_home/Library/Application Support&quot; &quot;$test_home/Library/Caches&quot;&#10;/usr/bin/defaults delete com.vanloc0301.pastebay.debug >/dev/null 2>&amp;1 || true&#10;/usr/bin/defaults delete com.vanloc0301.pastebay.tests >/dev/null 2>&amp;1 || true&#10;/usr/bin/killall cfprefsd >/dev/null 2>&amp;1 || true&#10;for prefs_dir in &quot;$HOME/Library/Preferences&quot; &quot;$real_home/Library/Preferences&quot;; do&#10;  /usr/bin/find &quot;$prefs_dir&quot; -maxdepth 1 -type f \( -name 'com.vanloc0301.pastebay*.plist' -o -name 'com.vanloc0301.pastebay*.plist.lockfile' \) -delete >/dev/null 2>&amp;1 || true&#10;done&#10;if [ -n &quot;${BUILT_PRODUCTS_DIR:-}&quot; ]; then&#10;  /usr/bin/pkill -f &quot;$BUILT_PRODUCTS_DIR/Pastebay.app/Contents/MacOS/Pastebay&quot; >/dev/null 2>&amp;1 || true&#10;fi">
                <EnvironmentBuildable>
                   <BuildableReference
                      BuildableIdentifier = "primary"
                      BlueprintIdentifier = "460202422F2814250040B043"
-                     BuildableName = "PHTV.app"
+                     BuildableName = "Pastebay.app"
                      BlueprintName = "PHTV"
                      ReferencedContainer = "container:PHTV.xcodeproj">
                   </BuildableReference>
@@ -64,12 +64,12 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Clean test preferences"
-               scriptText = "#!/bin/sh&#10;user_name=&quot;${USER:-$(/usr/bin/id -un)}&quot;&#10;real_home=&quot;$(eval echo &quot;~$user_name&quot;)&quot;&#10;/usr/bin/defaults delete com.phamhungtien.phtv.debug >/dev/null 2>&amp;1 || true&#10;/usr/bin/killall cfprefsd >/dev/null 2>&amp;1 || true&#10;/bin/sleep 0.2&#10;for prefs_dir in &quot;$HOME/Library/Preferences&quot; &quot;$real_home/Library/Preferences&quot;; do&#10;  /usr/bin/find &quot;$prefs_dir&quot; -maxdepth 1 -type f \( -name 'com.phamhungtien.phtv.debug*.plist' -o -name 'com.phamhungtien.phtv.debug*.plist.lockfile' -o -name 'com.phamhungtien.phtv.tests*.plist' -o -name 'com.phamhungtien.phtv.tests*.plist.lockfile' -o -name 'SystemTextReplacementServiceTests*.plist' -o -name 'SystemTextReplacementServiceTests*.plist.lockfile' \) -delete >/dev/null 2>&amp;1 || true&#10;done">
+               scriptText = "#!/bin/sh&#10;user_name=&quot;${USER:-$(/usr/bin/id -un)}&quot;&#10;real_home=&quot;$(eval echo &quot;~$user_name&quot;)&quot;&#10;/usr/bin/defaults delete com.vanloc0301.pastebay.debug >/dev/null 2>&amp;1 || true&#10;/usr/bin/defaults delete com.vanloc0301.pastebay.tests >/dev/null 2>&amp;1 || true&#10;/usr/bin/killall cfprefsd >/dev/null 2>&amp;1 || true&#10;for prefs_dir in &quot;$HOME/Library/Preferences&quot; &quot;$real_home/Library/Preferences&quot;; do&#10;  /usr/bin/find &quot;$prefs_dir&quot; -maxdepth 1 -type f \( -name 'com.vanloc0301.pastebay*.plist' -o -name 'com.vanloc0301.pastebay*.plist.lockfile' \) -delete >/dev/null 2>&amp;1 || true&#10;done">
                <EnvironmentBuildable>
                   <BuildableReference
                      BuildableIdentifier = "primary"
                      BlueprintIdentifier = "460202422F2814250040B043"
-                     BuildableName = "PHTV.app"
+                     BuildableName = "Pastebay.app"
                      BlueprintName = "PHTV"
                      ReferencedContainer = "container:PHTV.xcodeproj">
                   </BuildableReference>
@@ -83,26 +83,26 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "46020A032F3000000040B043"
-               BuildableName = "PHEngineTests.xctest"
-               BlueprintName = "PHEngineTests"
+               BuildableName = "PastebayTests.xctest"
+               BlueprintName = "PastebayTests"
                ReferencedContainer = "container:PHTV.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
       <EnvironmentVariables>
          <EnvironmentVariable
-            key = "PHTV_RUNNING_XCTEST"
+            key = "PASTEBAY_RUNNING_XCTEST"
             value = "1"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "CFFIXED_USER_HOME"
-            value = "$(PROJECT_TEMP_DIR)/PHTVTestHome"
+            value = "$(PROJECT_TEMP_DIR)/PastebayTestHome"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "HOME"
-            value = "$(PROJECT_TEMP_DIR)/PHTVTestHome"
+            value = "$(PROJECT_TEMP_DIR)/PastebayTestHome"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>
@@ -122,7 +122,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "460202422F2814250040B043"
-            BuildableName = "PHTV.app"
+            BuildableName = "Pastebay.app"
             BlueprintName = "PHTV"
             ReferencedContainer = "container:PHTV.xcodeproj">
          </BuildableReference>
@@ -139,7 +139,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "460202422F2814250040B043"
-            BuildableName = "PHTV.app"
+            BuildableName = "Pastebay.app"
             BlueprintName = "PHTV"
             ReferencedContainer = "container:PHTV.xcodeproj">
          </BuildableReference>

@@ -106,7 +106,7 @@ final class ClipboardHistoryLogicTests: XCTestCase {
             fileReferences: [
                 ClipboardHistoryFileReference(
                     originalPath: "/Users/example/Desktop/original.png",
-                    cachedPath: "/Users/example/Library/Application Support/PHTV/ClipboardHistoryFiles/item/original.png",
+                    cachedPath: "/Users/example/Library/Application Support/Pastebay/ClipboardHistoryFiles/item/original.png",
                     displayName: "original.png",
                     sizeBytes: 12
                 )
@@ -118,7 +118,7 @@ final class ClipboardHistoryLogicTests: XCTestCase {
             ClipboardHistoryPastePayloadResolver.resolve(item) { path in
                 path.contains("ClipboardHistoryFiles")
             },
-            .files(["/Users/example/Library/Application Support/PHTV/ClipboardHistoryFiles/item/original.png"])
+            .files(["/Users/example/Library/Application Support/Pastebay/ClipboardHistoryFiles/item/original.png"])
         )
     }
 

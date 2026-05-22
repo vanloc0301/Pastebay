@@ -131,7 +131,7 @@ final class ClipboardHistoryManager {
 
     private static var historyFileURL: URL {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        let dir = appSupport.appendingPathComponent("PHTV", isDirectory: true)
+        let dir = appSupport.appendingPathComponent("Pastebay", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir.appendingPathComponent("clipboard_history.json")
     }

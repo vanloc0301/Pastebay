@@ -1,6 +1,6 @@
-# Clipboard History for macOS
+# Pastebay
 
-Ứng dụng menu bar macOS được rút gọn từ PHTV và chỉ giữ lại tính năng Clipboard History.
+Ứng dụng menu bar macOS chỉ dành cho Clipboard History.
 
 ## Tính năng còn giữ
 
@@ -31,4 +31,4 @@ xcodebuild build \
   DEVELOPMENT_TEAM=""
 ```
 
-GitHub Actions chạy workflow `CI` để build app và chạy test logic của Clipboard History.
+GitHub Actions chạy workflow `CI` để build Pastebay và chạy test logic của Clipboard History.

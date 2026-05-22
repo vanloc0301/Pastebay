@@ -1,9 +1,6 @@
 //
 //  SystemSettingsView.swift
-//  PHTV
-//
-//  Created by Phạm Hùng Tiến on 2026.
-//  Copyright © 2026 Phạm Hùng Tiến. All rights reserved.
+//  Pastebay
 //
 
 import AppKit
@@ -18,7 +15,7 @@ struct SystemSettingsView: View {
             LazyVStack(spacing: SettingsLayout.sectionSpacing) {
                 SettingsCard(
                     title: "Quyền Trợ năng",
-                    subtitle: "Cho phép dán lại mục đã chọn từ Clipboard History",
+                    subtitle: "Cho phép Pastebay gửi lệnh dán vào ứng dụng đang dùng",
                     icon: "checkmark.shield.fill"
                 ) {
                     VStack(spacing: 0) {
@@ -32,7 +29,7 @@ struct SystemSettingsView: View {
                                 Text(hasAccessibilityPermission ? "Đã cấp quyền Trợ năng" : "Chưa cấp quyền Trợ năng")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
-                                Text("Clipboard History cần quyền này để gửi lệnh dán vào ứng dụng đang dùng.")
+                                Text("Quyền này chỉ dùng để paste lại mục clipboard đã chọn.")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -40,7 +37,8 @@ struct SystemSettingsView: View {
                             Spacer(minLength: 12)
 
                             Button(hasAccessibilityPermission ? "Mở lại" : "Cấp quyền") {
-                                requestAccessibilityPermission()
+                                PastebayAccessibilityService.openAccessibilityPreferences()
+                                refreshAccessibilityStatus()
                             }
                         }
                         .padding(.vertical, SettingsLayout.rowVerticalPadding)
@@ -51,7 +49,7 @@ struct SystemSettingsView: View {
                             icon: "arrow.clockwise.circle.fill",
                             iconColor: .accentColor,
                             title: "Kiểm tra lại trạng thái",
-                            subtitle: "Cập nhật trạng thái sau khi bạn bật quyền trong System Settings",
+                            subtitle: "Cập nhật trạng thái sau khi bật quyền trong System Settings",
                             action: refreshAccessibilityStatus
                         )
                     }
@@ -66,11 +64,6 @@ struct SystemSettingsView: View {
             await observeAccessibilityChanges()
         }
         .onAppear(perform: refreshAccessibilityStatus)
-    }
-
-    private func requestAccessibilityPermission() {
-        PHTVAccessibilityService.openAccessibilityPreferences()
-        refreshAccessibilityStatus()
     }
 
     private func refreshAccessibilityStatus() {
@@ -90,6 +83,4 @@ struct SystemSettingsView: View {
 
 #Preview {
     SystemSettingsView()
-        .environment(AppState.shared)
-        .frame(width: 500, height: 360)
 }

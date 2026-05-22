@@ -1,748 +1,90 @@
 //
 //  Constants.swift
-//  PHTV
-//
-//  Created by Phạm Hùng Tiến on 2026.
-//  Copyright © 2026 Phạm Hùng Tiến. All rights reserved.
+//  Pastebay
 //
 
-import Foundation
 import AppKit
-
-// MARK: - Build Info
-
-enum PHTVBuildInfo {
-    static var isDebugBuild: Bool {
-        #if DEBUG
-        true
-        #else
-        false
-        #endif
-    }
-
-    static var updatesEnabled: Bool {
-        !isDebugBuild
-    }
-
-    static var shortVersion: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
-    }
-
-    static var buildNumber: String {
-        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
-    }
-
-    static var displayVersion: String {
-        isDebugBuild ? "\(shortVersion) Debug (\(buildNumber))" : shortVersion
-    }
-}
-
-// MARK: - UserDefaults Keys
+import Foundation
 
 enum UserDefaultsKey {
-    // MARK: - Input Method
-    static let inputMethod = "InputMethod"
-    static let inputType = "InputType"
-    static let codeTable = "CodeTable"
-    static let freeMark = "FreeMark"
-
-    // MARK: - Spelling & Features
-    static let spelling = "Spelling"
-    static let modernOrthography = "ModernOrthography"
-    static let quickTelex = "QuickTelex"
-    static let fixRecommendBrowser = "FixRecommendBrowser"
-    static let sendKeyStepByStep = "SendKeyStepByStep"
-    static let useMacro = "UseMacro"
-    static let useMacroInEnglishMode = "UseMacroInEnglishMode"
-    static let useSystemTextReplacements = "UseSystemTextReplacements"
-    static let autoCapsMacro = "vAutoCapsMacro"
-    static let macroList = "macroList"
-    static let macroCategories = "macroCategories"
-    static let useSmartSwitchKey = "UseSmartSwitchKey"
-    static let upperCaseFirstChar = "UpperCaseFirstChar"
-    static let allowConsonantZFWJ = "vAllowConsonantZFWJ"
-    static let quickStartConsonant = "vQuickStartConsonant"
-    static let quickEndConsonant = "vQuickEndConsonant"
-    static let rememberCode = "vRememberCode"
-    static let autoRestoreEnglishWord = "vAutoRestoreEnglishWord"
-    static let autoRestoreEnglishWordMode = "vAutoRestoreEnglishWordMode"
-    static let restoreIfWrongSpelling = "vRestoreIfWrongSpelling"
-    static let tempOffSpelling = "vTempOffSpelling"
-    static let otherLanguage = "vOtherLanguage"
-    static let tempOffPHTV = "vTempOffPHTV"
-
-    // MARK: - Restore & Pause Keys
-    static let restoreOnEscape = "vRestoreOnEscape"
-    static let customEscapeKey = "vCustomEscapeKey"
-    static let pauseKeyEnabled = "vPauseKeyEnabled"
-    static let pauseKey = "vPauseKey"
-    static let pauseKeyName = "vPauseKeyName"
-
-    // MARK: - Clipboard History
-    static let enableClipboardHistory = "vEnableClipboardHistory"
-    static let clipboardHotkeyModifiers = "vClipboardHotkeyModifiers"
-    static let clipboardHotkeyKeyCode = "vClipboardHotkeyKeyCode"
-    static let clipboardHistoryMaxItems = "vClipboardHistoryMaxItems"
-    static let clipboardHistoryData = "vClipboardHistoryData"
-
-    // MARK: - Emoji Hotkey
-    static let enableEmojiHotkey = "vEnableEmojiHotkey"
-    static let emojiHotkeyModifiers = "vEmojiHotkeyModifiers"
-    static let emojiHotkeyKeyCode = "vEmojiHotkeyKeyCode"
-
-    // MARK: - System Settings
-    static let runOnStartup = "PHTV_RunOnStartup"
-    static let runOnStartupLegacy = "RunOnStartup"
-    static let performLayoutCompat = "vPerformLayoutCompat"
-    static let showIconOnDock = "vShowIconOnDock"
-    static let settingsWindowAlwaysOnTop = "vSettingsWindowAlwaysOnTop"
-    static let safeMode = "SafeMode"
-    static let convertToolDontAlertWhenCompleted = "convertToolDontAlertWhenCompleted"
-    static let convertToolHotKey = "convertToolHotKey"
-    static let convertToolFromCode = "convertToolFromCode"
-    static let convertToolToCode = "convertToolToCode"
-    static let keyboardCleaningDuration = "PHTV_KeyboardCleaningDuration"
-
-    // MARK: - Hotkey Settings
-    static let switchKeyStatus = "SwitchKeyStatus"
-    static let beepOnModeSwitch = "vBeepOnModeSwitch"
-
-    // MARK: - Audio & Display
-    static let beepVolume = "vBeepVolume"
-    static let menuBarIconSize = "vMenuBarIconSize"
-    static let useVietnameseMenubarIcon = "vUseVietnameseMenubarIcon"
-    static let grayIcon = "GrayIcon"
-
-    // MARK: - App Lists
-    static let excludedApps = "ExcludedApps"
-    static let sendKeyStepByStepApps = "SendKeyStepByStepApps"
-    static let upperCaseExcludedApps = "UpperCaseExcludedApps"
-    static let klipyCustomerID = "KlipyCustomerID"
-
-    // MARK: - Sparkle Updates
-    static let updateCheckInterval = "SUScheduledCheckInterval"
-    static let sparkleBetaChannel = "SUEnableBetaChannel"
-    static let automaticUpdateChecks = "SUEnableAutomaticChecks"
-    static let autoInstallUpdates = "SUAutomaticallyUpdate"
-    static let legacyAutoInstallUpdates = "vAutoInstallUpdates"
-
-    // MARK: - Debug
-    static let liveDebug = "PHTV_LIVE_DEBUG"
-    static let includeSystemInfo = "vIncludeSystemInfo"
-    static let includeLogs = "vIncludeLogs"
-    static let includeCrashLogs = "vIncludeCrashLogs"
-
-    // MARK: - Onboarding
-    static let onboardingCompleted = "PHTV_OnboardingCompleted"
+    static let enableClipboardHistory = "Pastebay_EnableClipboardHistory"
+    static let clipboardHotkeyModifiers = "Pastebay_ClipboardHotkeyModifiers"
+    static let clipboardHotkeyKeyCode = "Pastebay_ClipboardHotkeyKeyCode"
+    static let clipboardHistoryMaxItems = "Pastebay_ClipboardHistoryMaxItems"
+    static let clipboardHistoryData = "Pastebay_ClipboardHistoryData"
 }
-
-// MARK: - Notification Names
 
 enum NotificationName {
-    // MARK: - Language Changes
-    static let languageChangedFromSwiftUI = NSNotification.Name("LanguageChangedFromSwiftUI")
-    static let languageChangedFromBackend = NSNotification.Name("LanguageChangedFromBackend")
-    static let languageChangedFromExcludedApp = NSNotification.Name("LanguageChangedFromExcludedApp")
-    static let languageChangedFromSmartSwitch = NSNotification.Name("LanguageChangedFromSmartSwitch")
-    static let languageChangedFromObjC = NSNotification.Name("LanguageChangedFromObjC")
-
-    // MARK: - Settings Changes
-    static let phtvSettingsChanged = NSNotification.Name("PHTVSettingsChanged")
-    static let settingsObserverDidChange = NSNotification.Name("SettingsObserverDidChange")
-    static let inputMethodChanged = NSNotification.Name("InputMethodChanged")
-    static let codeTableChanged = NSNotification.Name("CodeTableChanged")
-    static let toggleEnabled = NSNotification.Name("ToggleEnabled")
-    static let hotkeyChanged = NSNotification.Name("HotkeyChanged")
-    static let settingsReset = NSNotification.Name("SettingsReset")
-    static let settingsResetToDefaults = NSNotification.Name("SettingsResetToDefaults")
-    static let settingsResetComplete = NSNotification.Name("SettingsResetComplete")
-    static let macrosUpdated = NSNotification.Name("MacrosUpdated")
-    static let customDictionaryUpdated = NSNotification.Name("CustomDictionaryUpdated")
-
-    // MARK: - App Lists
-    static let excludedAppsChanged = NSNotification.Name("ExcludedAppsChanged")
-    static let sendKeyStepByStepAppsChanged = NSNotification.Name("SendKeyStepByStepAppsChanged")
-    static let upperCaseExcludedAppsChanged = NSNotification.Name("UpperCaseExcludedAppsChanged")
-
-    // MARK: - Emoji Hotkey
-    static let emojiHotkeySettingsChanged = NSNotification.Name("EmojiHotkeySettingsChanged")
-
-    // MARK: - Clipboard History
-    static let clipboardHotkeySettingsChanged = NSNotification.Name("ClipboardHotkeySettingsChanged")
-
-    // MARK: - System
-    static let accessibilityStatusChanged = NSNotification.Name("AccessibilityStatusChanged")
-    static let accessibilityPermissionLost = NSNotification.Name("AccessibilityPermissionLost")
-    static let typingRuntimeHealthChanged = NSNotification.Name("TypingRuntimeHealthChanged")
-    static let tccDatabaseChanged = NSNotification.Name("TCCDatabaseChanged")
-    static let runOnStartupChanged = NSNotification.Name("RunOnStartupChanged")
-    static let applicationWillTerminate = NSNotification.Name("ApplicationWillTerminate")
-    static let showSettings = NSNotification.Name("ShowSettings")
-    static let createSettingsWindow = NSNotification.Name("CreateSettingsWindow")
-    static let phtvShowDockIcon = NSNotification.Name("PHTVShowDockIcon")
-
-    // MARK: - UI Updates
-    static let menuBarIconSizeChanged = NSNotification.Name("MenuBarIconSizeChanged")
-    static let menuBarIconPreferenceChanged = NSNotification.Name("MenuBarIconPreferenceChanged")
-    static let showAboutTab = NSNotification.Name("ShowAboutTab")
-    static let showMacroTab = NSNotification.Name("ShowMacroTab")
-    static let showKeyboardCleaningTab = NSNotification.Name("ShowKeyboardCleaningTab")
-    static let showOnboarding = NSNotification.Name("ShowOnboarding")
-    static let showConvertToolSheet = NSNotification.Name("ShowConvertToolSheet")
-    static let openConvertToolSheet = NSNotification.Name("OpenConvertToolSheet")
-    static let showConvertTool = NSNotification.Name("ShowConvertTool")
-    static let openConvertTool = NSNotification.Name("OpenConvertTool")
-    static let showAbout = NSNotification.Name("ShowAbout")
-
-    // MARK: - Updates
-    static let checkForUpdatesResponse = NSNotification.Name("CheckForUpdatesResponse")
-    static let updateCheckFrequencyChanged = NSNotification.Name("UpdateCheckFrequencyChanged")
-    static let sparkleShowUpdateBanner = NSNotification.Name("SparkleShowUpdateBanner")
-    static let sparkleManualCheck = NSNotification.Name("SparkleManualCheck")
-    static let sparkleInstallUpdate = NSNotification.Name("SparkleInstallUpdate")
-    static let sparkleUpdateFound = NSNotification.Name("SparkleUpdateFound")
-    static let sparkleNoUpdateFound = NSNotification.Name("SparkleNoUpdateFound")
-    static let keyboardCleaningStateChanged = NSNotification.Name("KeyboardCleaningStateChanged")
+    static let clipboardHotkeySettingsChanged = Notification.Name("PastebayClipboardHotkeySettingsChanged")
+    static let showSettings = Notification.Name("PastebayShowSettings")
+    static let applicationWillTerminate = Notification.Name("PastebayApplicationWillTerminate")
 }
-
-// MARK: - Notification UserInfo Keys
-
-enum NotificationUserInfoKey {
-    static let visible = "visible"
-    static let forceFront = "forceFront"
-    static let enabled = "enabled"
-    static let macroId = "macroId"
-    static let action = "action"
-}
-
-enum MacroUpdateAction {
-    static let added = "added"
-    static let edited = "edited"
-}
-
-enum EventSourceMarker {
-    static let phtv: Int64 = 0x5048_5456 // "PHTV"
-}
-
-enum EngineBitMask {
-    static let caps: UInt32 = 0x0001_0000
-    static let charCode: UInt32 = 0x0200_0000
-    static let pureCharacter: UInt32 = 0x8000_0000
-}
-
-enum EnginePackedData {
-    static let unicodeCompoundMarks: [UInt16] = [0x0301, 0x0300, 0x0309, 0x0303, 0x0323]
-
-    static func lowByte(_ value: UInt32) -> UInt16 {
-        UInt16(truncatingIfNeeded: value & 0x00FF)
-    }
-
-    static func highByte(_ value: UInt32) -> UInt16 {
-        UInt16(truncatingIfNeeded: (value >> 8) & 0x00FF)
-    }
-
-    static func unicodeCompoundMark(at index: Int32) -> UInt16 {
-        let safeIndex = Int(index)
-        guard unicodeCompoundMarks.indices.contains(safeIndex) else {
-            return 0
-        }
-        return unicodeCompoundMarks[safeIndex]
-    }
-}
-
-enum EngineSignalCode {
-    static let doNothing: Int32 = 0
-    static let willProcess: Int32 = 1
-    static let restore: Int32 = 3
-    static let replaceMacro: Int32 = 4
-    static let restoreAndStartNewSession: Int32 = 5
-    static let maxBuffer: Int32 = 32
-}
-
-enum EngineInputClassification {
-    private static let navigationKeyCodes: Set<UInt16> = [
-        KeyCode.leftArrow,
-        KeyCode.rightArrow,
-        KeyCode.upArrow,
-        KeyCode.downArrow,
-        KeyCode.home,
-        KeyCode.end,
-        KeyCode.pageUp,
-        KeyCode.pageDown
-    ]
-
-    static func isDoubleCodeTable(_ codeTable: Int32) -> Bool {
-        codeTable == Int32(CodeTable.vniWindows.toIndex()) ||
-        codeTable == Int32(CodeTable.unicodeComposite.toIndex())
-    }
-
-    static func isNavigationKey(_ keyCode: UInt16) -> Bool {
-        navigationKeyCodes.contains(keyCode)
-    }
-}
-
-enum EngineMacroKeyMap {
-    // Mirror keyCodeToCharacter mapping in Core/Engine/VietnameseData.inc.
-    private static let unshifted: [UInt16: UInt16] = [
-        0: 0x0061, 11: 0x0062, 8: 0x0063, 2: 0x0064, 14: 0x0065, 3: 0x0066, 5: 0x0067, 4: 0x0068,
-        34: 0x0069, 38: 0x006A, 40: 0x006B, 37: 0x006C, 46: 0x006D, 45: 0x006E, 31: 0x006F, 35: 0x0070,
-        12: 0x0071, 15: 0x0072, 1: 0x0073, 17: 0x0074, 32: 0x0075, 9: 0x0076, 13: 0x0077, 7: 0x0078,
-        16: 0x0079, 6: 0x007A,
-        18: 0x0031, 19: 0x0032, 20: 0x0033, 21: 0x0034, 23: 0x0035, 22: 0x0036, 26: 0x0037, 28: 0x0038,
-        25: 0x0039, 29: 0x0030,
-        50: 0x0060, 27: 0x002D, 24: 0x003D, 33: 0x005B, 30: 0x005D, 42: 0x005C, 41: 0x003B, 39: 0x0027,
-        43: 0x002C, 47: 0x002E, 44: 0x002F,
-        49: 0x0020
-    ]
-
-    private static let shifted: [UInt16: UInt16] = [
-        0: 0x0041, 11: 0x0042, 8: 0x0043, 2: 0x0044, 14: 0x0045, 3: 0x0046, 5: 0x0047, 4: 0x0048,
-        34: 0x0049, 38: 0x004A, 40: 0x004B, 37: 0x004C, 46: 0x004D, 45: 0x004E, 31: 0x004F, 35: 0x0050,
-        12: 0x0051, 15: 0x0052, 1: 0x0053, 17: 0x0054, 32: 0x0055, 9: 0x0056, 13: 0x0057, 7: 0x0058,
-        16: 0x0059, 6: 0x005A,
-        18: 0x0021, 19: 0x0040, 20: 0x0023, 21: 0x0024, 23: 0x0025, 22: 0x005E, 26: 0x0026, 28: 0x002A,
-        25: 0x0028, 29: 0x0029,
-        50: 0x007E, 27: 0x005F, 24: 0x002B, 33: 0x007B, 30: 0x007D, 42: 0x007C, 41: 0x003A, 39: 0x0022,
-        43: 0x003C, 47: 0x003E, 44: 0x003F
-    ]
-
-    static func character(for keyData: UInt32) -> UInt16 {
-        let allowedMask = UInt32(KeyCode.keyMask) | EngineBitMask.caps
-        guard (keyData & ~allowedMask) == 0 else {
-            return 0
-        }
-
-        let keyCode = UInt16(truncatingIfNeeded: keyData & UInt32(KeyCode.keyMask))
-        if (keyData & EngineBitMask.caps) != 0 {
-            return shifted[keyCode] ?? 0
-        }
-        return unshifted[keyCode] ?? 0
-    }
-}
-
-// MARK: - Key Codes
-
-enum KeyCode {
-    // MARK: - Special Keys
-    static let noKey: UInt16 = 0xFE  // Modifier-only mode (no physical key)
-    static let keyMask = 0x00FF
-    static let tab: UInt16 = 48
-    static let delete: UInt16 = 51
-    static let escape: UInt16 = 53
-    static let enter: UInt16 = 76
-    static let returnKey: UInt16 = 36
-    static let leftCommand: UInt16 = 55
-    static let rightCommand: UInt16 = 54
-    static let leftControl: UInt16 = 59
-    static let rightControl: UInt16 = 62
-    static let leftOption: UInt16 = 58
-    static let rightOption: UInt16 = 61
-    static let space: UInt16 = 49
-    static let slash: UInt16 = 44
-    static let vKey: UInt16 = 9
-    static let eKey: UInt16 = 14
-    static let leftArrow: UInt16 = 123
-    static let rightArrow: UInt16 = 124
-    static let downArrow: UInt16 = 125
-    static let upArrow: UInt16 = 126
-    static let home: UInt16 = 115
-    static let pageUp: UInt16 = 116
-    static let end: UInt16 = 119
-    static let pageDown: UInt16 = 121
-    static let modifierOnlyDisplayName = "Không"
-
-    // MARK: - Modifier Masks (for SwitchKeyStatus encoding)
-    static let controlMask = 0x100
-    static let optionMask = 0x200
-    static let commandMask = 0x400
-    static let shiftMask = 0x800
-    static let fnMask = 0x1000
-    static let beepMask = 0x8000
-
-    // MARK: - Key Name Mapping
-    static let keyNames: [UInt16: String] = [
-        // Letters
-        0x00: "A", 0x01: "S", 0x02: "D", 0x03: "F", 0x04: "H",
-        0x05: "G", 0x06: "Z", 0x07: "X", 0x08: "C", 0x09: "V",
-        0x0B: "B", 0x0C: "Q", 0x0D: "W", 0x0E: "E", 0x0F: "R",
-        0x10: "Y", 0x11: "T",
-
-        // Numbers
-        0x12: "1", 0x13: "2", 0x14: "3", 0x15: "4", 0x16: "6",
-        0x17: "5", 0x19: "9", 0x1A: "7", 0x1C: "8", 0x1D: "0",
-
-        // Symbols
-        0x18: "=", 0x1B: "-", 0x1E: "]", 0x21: "[", 0x27: "'",
-        0x29: ";", 0x2A: "\\", 0x2B: ",", 0x2C: "/", 0x2F: ".",
-        0x31: "Space", 0x32: "`",
-
-        // More Letters
-        0x1F: "O", 0x20: "U", 0x22: "I", 0x23: "P",
-        0x25: "L", 0x26: "J", 0x28: "K", 0x2D: "N", 0x2E: "M",
-
-        // Function Keys
-        0x7A: "F1", 0x78: "F2", 0x63: "F3", 0x76: "F4",
-        0x60: "F5", 0x61: "F6", 0x62: "F7", 0x64: "F8",
-        0x65: "F9", 0x6D: "F10", 0x67: "F11", 0x6F: "F12"
-    ]
-
-    static func isModifierOnly(_ keyCode: UInt16) -> Bool {
-        keyCode == noKey
-    }
-
-    static func name(for keyCode: UInt16) -> String {
-        if isModifierOnly(keyCode) {
-            return modifierOnlyDisplayName
-        }
-        return keyNames[keyCode] ?? "Key \(keyCode)"
-    }
-}
-
-enum HotkeyFormatter {
-    static func switchHotkeyString(
-        control: Bool,
-        option: Bool,
-        shift: Bool,
-        command: Bool,
-        fn: Bool,
-        keyCode: UInt16,
-        keyName: String
-    ) -> String {
-        var parts: [String] = []
-        if fn { parts.append("fn") }
-        if control { parts.append("⌃") }
-        if option { parts.append("⌥") }
-        if shift { parts.append("⇧") }
-        if command { parts.append("⌘") }
-        if !KeyCode.isModifierOnly(keyCode) { parts.append(keyName) }
-        return parts.isEmpty ? "Chưa đặt" : parts.joined()
-    }
-}
-
-// MARK: - Default Values
 
 enum Defaults {
-    // MARK: - Input Method
-    static let inputMethod = InputMethod.telex
-    static let codeTable = CodeTable.unicode
-
-    // MARK: - Features
-    static let checkSpelling = true
-    static let useModernOrthography = true
-    static let quickTelex = false
-    static let fixRecommendBrowser = true
-    static let sendKeyStepByStep = false
-    static let useMacro = true
-    static let useMacroInEnglishMode = false
-    static let useSystemTextReplacements = false
-    static let autoCapsMacro = false
-    static let useSmartSwitchKey = true
-    static let upperCaseFirstChar = false
-    static let allowConsonantZFWJ = true
-    static let quickStartConsonant = false
-    static let quickEndConsonant = false
-    static let rememberCode = true
-    static let autoRestoreEnglishWord = true
-    static let autoRestoreEnglishWordMode = AutoRestoreEnglishMode.englishOnly
-    static let restoreIfWrongSpelling = false
-
-    // MARK: - Restore & Pause
-    static let restoreOnEscape = true
-    static let restoreKeyCode = KeyCode.escape
-    static let pauseKeyEnabled = false
-    static let pauseKeyCode = KeyCode.leftOption
-    static let pauseKeyName = "Option"
-
-    // MARK: - Clipboard History
     static let enableClipboardHistory = true
     static let clipboardHotkeyModifiers = NSEvent.ModifierFlags.control.rawValue
     static let clipboardHotkeyKeyCode = KeyCode.vKey
     static let clipboardHistoryMaxItems = 500
-
-    // MARK: - Emoji Hotkey
-    static let enableEmojiHotkey = true
-    static let emojiHotkeyModifiers = NSEvent.ModifierFlags.command.rawValue
-    static let emojiHotkeyKeyCode = KeyCode.eKey
-
-    // MARK: - System
-    static let runOnStartup = false
-    static let performLayoutCompat = false
-    static let showIconOnDock = false
-    static let settingsWindowAlwaysOnTop = false
-    static let safeMode = false
-    static let convertToolDontAlertWhenCompleted = false
-    static let convertToolFromCode = CodeTable.tcvn.toIndex()
-    static let convertToolToCode = CodeTable.unicode.toIndex()
-    static let keyboardCleaningDuration = 60.0
-
-    // MARK: - Hotkey
-    static let switchKeyControl = true
-    static let switchKeyOption = false
-    static let switchKeyCommand = false
-    static let switchKeyShift = true
-    static let switchKeyFn = false
-    static let switchKeyCode = KeyCode.noKey
-    static let switchKeyName = KeyCode.modifierOnlyDisplayName
-    static let beepOnModeSwitch = false
-    static var defaultSwitchKeyStatus: Int {
-        var status = Int(switchKeyCode)
-        if switchKeyControl { status |= KeyCode.controlMask }
-        if switchKeyOption { status |= KeyCode.optionMask }
-        if switchKeyCommand { status |= KeyCode.commandMask }
-        if switchKeyShift { status |= KeyCode.shiftMask }
-        if switchKeyFn { status |= KeyCode.fnMask }
-        if beepOnModeSwitch { status |= KeyCode.beepMask }
-        return status
-    }
-
-    // MARK: - Audio & Display
-    static let beepVolume = 0.5
-    static let menuBarIconSize = 18.0
-    static let useVietnameseMenubarIcon = false
-
-    // MARK: - Updates
-    static let updateCheckInterval = 86400  // 1 day in seconds
-    static let automaticUpdateChecks = true
-    static let autoInstallUpdates = true
-
-    // MARK: - Bug Report
-    static let includeSystemInfo = true
-    static let includeLogs = false
-    static let includeCrashLogs = true
 }
 
-// MARK: - UserDefaults Helpers
+enum KeyCode {
+    static let noKey: UInt16 = 0xFE
+    static let keyMask = 0x00FF
+    static let escape: UInt16 = 53
+    static let vKey: UInt16 = 9
+    static let eKey: UInt16 = 14
+    static let space: UInt16 = 49
+    static let modifierOnlyDisplayName = "Không"
+
+    static let keyNames: [UInt16: String] = [
+        0x00: "A", 0x01: "S", 0x02: "D", 0x03: "F", 0x04: "H",
+        0x05: "G", 0x06: "Z", 0x07: "X", 0x08: "C", 0x09: "V",
+        0x0B: "B", 0x0C: "Q", 0x0D: "W", 0x0E: "E", 0x0F: "R",
+        0x10: "Y", 0x11: "T",
+        0x12: "1", 0x13: "2", 0x14: "3", 0x15: "4", 0x16: "6",
+        0x17: "5", 0x19: "9", 0x1A: "7", 0x1C: "8", 0x1D: "0",
+        0x18: "=", 0x1B: "-", 0x1E: "]", 0x21: "[", 0x27: "'",
+        0x29: ";", 0x2A: "\\", 0x2B: ",", 0x2C: "/", 0x2F: ".",
+        0x31: "Space", 0x32: "`",
+        0x1F: "O", 0x20: "U", 0x22: "I", 0x23: "P",
+        0x25: "L", 0x26: "J", 0x28: "K", 0x2D: "N", 0x2E: "M",
+        0x7A: "F1", 0x78: "F2", 0x63: "F3", 0x76: "F4",
+        0x60: "F5", 0x61: "F6", 0x62: "F7", 0x64: "F8",
+        0x65: "F9", 0x6D: "F10", 0x67: "F11", 0x6F: "F12"
+    ]
+}
 
 extension UserDefaults {
-    private func decodePersistedBool(_ value: Any?) -> Bool? {
-        if let boolValue = value as? Bool {
-            return boolValue
-        }
-        if let numberValue = value as? NSNumber {
-            return numberValue.boolValue
-        }
-        if let stringValue = value as? String {
-            switch stringValue.lowercased() {
-            case "1", "true", "yes":
-                return true
-            case "0", "false", "no":
-                return false
-            default:
-                return nil
-            }
-        }
-        return nil
-    }
-
-    /// Reads a value only if it was explicitly persisted (ignores register(defaults:)).
-    func persistedObject(forKey key: String) -> Any? {
-        guard let bundleIdentifier = Bundle.main.bundleIdentifier,
-              let persistedDomain = persistentDomain(forName: bundleIdentifier) else {
-            return nil
-        }
-        return persistedDomain[key]
-    }
-
-    /// Migrates the first available legacy key into `key` when `key` has no persisted value.
-    @discardableResult
-    func migrateValueIfMissing(
-        forKey key: String,
-        fromLegacyKeys legacyKeys: [String],
-        transform: ((Any) -> Any?)? = nil
-    ) -> Bool {
-        guard persistedObject(forKey: key) == nil else {
-            return false
-        }
-
-        for legacyKey in legacyKeys {
-            guard let legacyValue = persistedObject(forKey: legacyKey) else { continue }
-            let migratedValue: Any
-            if let transform {
-                guard let transformedValue = transform(legacyValue) else { continue }
-                migratedValue = transformedValue
-            } else {
-                migratedValue = legacyValue
-            }
-            set(migratedValue, forKey: key)
-            return true
-        }
-        return false
-    }
-
-    /// Reads a Bool with explicit fallback when the key is missing.
     func bool(forKey key: String, default defaultValue: Bool) -> Bool {
-        guard let value = object(forKey: key) else {
-            return defaultValue
-        }
-        if let boolValue = value as? Bool {
-            return boolValue
-        }
-        if let numberValue = value as? NSNumber {
-            return numberValue.boolValue
-        }
+        guard let value = object(forKey: key) else { return defaultValue }
+        if let boolValue = value as? Bool { return boolValue }
+        if let numberValue = value as? NSNumber { return numberValue.boolValue }
         return defaultValue
     }
 
-    /// Reads an Int with explicit fallback when the key is missing.
     func integer(forKey key: String, default defaultValue: Int) -> Int {
-        guard let value = object(forKey: key) else {
-            return defaultValue
-        }
-        if let intValue = value as? Int {
-            return intValue
-        }
-        if let numberValue = value as? NSNumber {
-            return numberValue.intValue
-        }
+        guard let value = object(forKey: key) else { return defaultValue }
+        if let intValue = value as? Int { return intValue }
+        if let numberValue = value as? NSNumber { return numberValue.intValue }
         return defaultValue
-    }
-
-    /// Auto-restore now only supports English-word restoration.
-    func autoRestoreEnglishMode() -> AutoRestoreEnglishMode {
-        _ = persistedObject(forKey: UserDefaultsKey.autoRestoreEnglishWordMode)
-        _ = decodePersistedBool(persistedObject(forKey: UserDefaultsKey.restoreIfWrongSpelling))
-        _ = decodePersistedBool(persistedObject(forKey: "RestoreIfInvalidWord"))
-        return .englishOnly
-    }
-
-    /// Reads a Double with explicit fallback when the key is missing.
-    func double(forKey key: String, default defaultValue: Double) -> Double {
-        guard let value = object(forKey: key) else {
-            return defaultValue
-        }
-        if let doubleValue = value as? Double {
-            return doubleValue
-        }
-        if let numberValue = value as? NSNumber {
-            return numberValue.doubleValue
-        }
-        return defaultValue
-    }
-
-    private func isExplicitlyEnabled(forKey key: String) -> Bool {
-        guard let value = object(forKey: key) else { return false }
-        if let boolValue = value as? Bool {
-            return boolValue
-        }
-        if let numberValue = value as? NSNumber {
-            return numberValue.boolValue
-        }
-        return false
-    }
-
-    /// Returns true when Sparkle preferences need to be normalized to the stable channel.
-    func requiresStableUpdateChannelEnforcement() -> Bool {
-        if object(forKey: UserDefaultsKey.sparkleBetaChannel) != nil {
-            return true
-        }
-        return object(forKey: UserDefaultsKey.legacyAutoInstallUpdates) != nil
-    }
-
-    /// Always use the stable Sparkle channel. Automatic checks and installs are managed by the UI.
-    @discardableResult
-    func enforceStableUpdateChannel() -> Bool {
-        var changed = false
-
-        if object(forKey: UserDefaultsKey.sparkleBetaChannel) != nil {
-            removeObject(forKey: UserDefaultsKey.sparkleBetaChannel)
-            changed = true
-        }
-        if object(forKey: UserDefaultsKey.legacyAutoInstallUpdates) != nil {
-            removeObject(forKey: UserDefaultsKey.legacyAutoInstallUpdates)
-            changed = true
-        }
-
-        return changed
     }
 }
 
-// MARK: - Settings Bootstrap
-
-@objcMembers
-final class SettingsBootstrap: NSObject {
-    /// Registers all default settings used by both Swift and Objective-C layers.
+enum SettingsBootstrap {
     static func registerDefaults() {
-        UserDefaults.standard.register(defaults: registrationDefaults())
-    }
-
-    private static func registrationDefaults() -> [String: Any] {
-        [
-            UserDefaultsKey.inputMethod: 1,
-            UserDefaultsKey.inputType: Defaults.inputMethod.toIndex(),
-            UserDefaultsKey.codeTable: Defaults.codeTable.toIndex(),
-            UserDefaultsKey.spelling: Defaults.checkSpelling,
-            UserDefaultsKey.modernOrthography: Defaults.useModernOrthography,
-            UserDefaultsKey.quickTelex: Defaults.quickTelex,
-            UserDefaultsKey.useMacro: Defaults.useMacro,
-            UserDefaultsKey.useMacroInEnglishMode: Defaults.useMacroInEnglishMode,
-            UserDefaultsKey.useSystemTextReplacements: Defaults.useSystemTextReplacements,
-            UserDefaultsKey.autoCapsMacro: Defaults.autoCapsMacro,
-            UserDefaultsKey.sendKeyStepByStep: Defaults.sendKeyStepByStep,
-            UserDefaultsKey.useSmartSwitchKey: Defaults.useSmartSwitchKey,
-            UserDefaultsKey.upperCaseFirstChar: Defaults.upperCaseFirstChar,
-            UserDefaultsKey.allowConsonantZFWJ: Defaults.allowConsonantZFWJ,
-            UserDefaultsKey.quickStartConsonant: Defaults.quickStartConsonant,
-            UserDefaultsKey.quickEndConsonant: Defaults.quickEndConsonant,
-            UserDefaultsKey.rememberCode: Defaults.rememberCode,
-            UserDefaultsKey.autoRestoreEnglishWord: Defaults.autoRestoreEnglishWord,
-            UserDefaultsKey.autoRestoreEnglishWordMode: Defaults.autoRestoreEnglishWordMode.rawValue,
-            UserDefaultsKey.restoreIfWrongSpelling: Defaults.restoreIfWrongSpelling,
-            UserDefaultsKey.restoreOnEscape: Defaults.restoreOnEscape,
-            UserDefaultsKey.customEscapeKey: Int(Defaults.restoreKeyCode),
-            UserDefaultsKey.pauseKeyEnabled: Defaults.pauseKeyEnabled,
-            UserDefaultsKey.pauseKey: Int(Defaults.pauseKeyCode),
-            UserDefaultsKey.pauseKeyName: Defaults.pauseKeyName,
-            UserDefaultsKey.switchKeyStatus: Defaults.defaultSwitchKeyStatus,
-            UserDefaultsKey.beepOnModeSwitch: Defaults.beepOnModeSwitch,
-            UserDefaultsKey.beepVolume: Defaults.beepVolume,
-            UserDefaultsKey.menuBarIconSize: Defaults.menuBarIconSize,
-            UserDefaultsKey.useVietnameseMenubarIcon: Defaults.useVietnameseMenubarIcon,
-            UserDefaultsKey.showIconOnDock: Defaults.showIconOnDock,
-            UserDefaultsKey.performLayoutCompat: Defaults.performLayoutCompat,
-            UserDefaultsKey.settingsWindowAlwaysOnTop: Defaults.settingsWindowAlwaysOnTop,
-            UserDefaultsKey.safeMode: Defaults.safeMode,
-            UserDefaultsKey.convertToolDontAlertWhenCompleted: Defaults.convertToolDontAlertWhenCompleted,
-            UserDefaultsKey.convertToolFromCode: Defaults.convertToolFromCode,
-            UserDefaultsKey.convertToolToCode: Defaults.convertToolToCode,
-            UserDefaultsKey.keyboardCleaningDuration: Defaults.keyboardCleaningDuration,
+        UserDefaults.standard.register(defaults: [
             UserDefaultsKey.enableClipboardHistory: Defaults.enableClipboardHistory,
             UserDefaultsKey.clipboardHotkeyModifiers: Int(Defaults.clipboardHotkeyModifiers),
             UserDefaultsKey.clipboardHotkeyKeyCode: Int(Defaults.clipboardHotkeyKeyCode),
-            UserDefaultsKey.clipboardHistoryMaxItems: Defaults.clipboardHistoryMaxItems,
-            UserDefaultsKey.enableEmojiHotkey: Defaults.enableEmojiHotkey,
-            UserDefaultsKey.emojiHotkeyModifiers: Int(Defaults.emojiHotkeyModifiers),
-            UserDefaultsKey.emojiHotkeyKeyCode: Int(Defaults.emojiHotkeyKeyCode),
-            UserDefaultsKey.runOnStartup: Defaults.runOnStartup,
-            UserDefaultsKey.runOnStartupLegacy: 0,
-            UserDefaultsKey.updateCheckInterval: Defaults.updateCheckInterval,
-            UserDefaultsKey.automaticUpdateChecks: Defaults.automaticUpdateChecks,
-            UserDefaultsKey.includeSystemInfo: Defaults.includeSystemInfo,
-            UserDefaultsKey.includeLogs: Defaults.includeLogs,
-            UserDefaultsKey.includeCrashLogs: Defaults.includeCrashLogs,
-            UserDefaultsKey.autoInstallUpdates: Defaults.autoInstallUpdates,
-            "FreeMark": 0,
-            "FixRecommendBrowser": 1,
-            "vTempOffSpelling": 0,
-            "vOtherLanguage": 1,
-            "vTempOffPHTV": 0,
-            "GrayIcon": 1
-        ]
+            UserDefaultsKey.clipboardHistoryMaxItems: Defaults.clipboardHistoryMaxItems
+        ])
     }
 }
 
-// MARK: - Timing Constants
-
-enum Timing {
-    /// Debounce time for settings observers (milliseconds)
-    static let settingsDebounce = 100
-
-    /// Debounce time for audio sliders (milliseconds)
-    static let audioSliderDebounce = 250
-
-    /// Debounce time for hotkey changes (milliseconds)
-    static let hotkeyDebounce = 10
-
-    /// External settings observer debounce (seconds)
-    static let externalSettingsDebounce = 0.1
-
+enum RuntimeEnvironment {
+    static var isRunningTests: Bool {
+        let environment = ProcessInfo.processInfo.environment
+        return environment["PASTEBAY_RUNNING_XCTEST"] == "1"
+            || environment["XCTestConfigurationFilePath"] != nil
+    }
 }

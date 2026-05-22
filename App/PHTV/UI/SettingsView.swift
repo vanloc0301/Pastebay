@@ -1,240 +1,45 @@
 //
 //  SettingsView.swift
-//  PHTV
-//
-//  Created by Phạm Hùng Tiến on 2026.
-//  Copyright © 2026 Phạm Hùng Tiến. All rights reserved.
+//  Pastebay
 //
 
 import SwiftUI
 
-// MARK: - Main Settings View
 struct SettingsView: View {
-    @Environment(AppState.self) private var appState
-    @State private var selectedTab: SettingsTab = .clipboardHistory
-    @State private var searchText: String = ""
-
-    private var filteredSettings: [SettingsItem] {
-        if searchText.isEmpty {
-            return []
-        }
-        return SettingsItem.allItems.filter { item in
-            item.title.localizedCaseInsensitiveContains(searchText)
-                || item.keywords.contains { $0.localizedCaseInsensitiveContains(searchText) }
-        }
-    }
+    @State private var selectedTab: SettingsTab = .clipboard
 
     var body: some View {
-        settingsSplitView
-            .onChange(of: appState.showIconOnDock) { _, newValue in
-                // When dock icon toggle is changed, update immediately and save
-                let appDelegate = AppDelegate.current()
-                NSLog("[SettingsView] onChange - showIconOnDock changed to %@", newValue ? "true" : "false")
-                appDelegate?.showIcon(newValue)  // This one saves to UserDefaults
-            }
-    }
-
-    @MainActor
-    private func observeTabSelectionNotification(named name: Notification.Name, tab: SettingsTab) async {
-        for await _ in NotificationCenter.default.notifications(named: name) {
-            guard !Task.isCancelled else { return }
-            selectedTab = tab
-        }
-    }
-
-    @MainActor
-    private func observeConvertToolRequests() async {
-        for await _ in NotificationCenter.default.notifications(named: NotificationName.showConvertToolSheet) {
-            guard !Task.isCancelled else { return }
-
-            // Switch to System tab first, then SystemSettingsView will show the sheet
-            guard selectedTab != .system else { continue }
-            selectedTab = .system
-
-            // Give SystemSettingsView a moment to mount before asking it to open the sheet.
-            try? await Task.sleep(for: .seconds(0.15))
-            guard !Task.isCancelled else { return }
-            NotificationCenter.default.post(name: NotificationName.openConvertToolSheet, object: nil)
-        }
-    }
-
-    private var settingsSplitView: some View {
         NavigationSplitView {
-            sidebarView
-        } detail: {
-            ZStack {
-                settingsDetailExtensionBackground
-
-                detailView
-                    .environment(appState)
+            List(selection: $selectedTab) {
+                Label("Clipboard History", systemImage: "doc.on.clipboard")
+                    .tag(SettingsTab.clipboard)
+                Label("Trợ năng", systemImage: "checkmark.shield")
+                    .tag(SettingsTab.accessibility)
             }
-            .frame(
-                minWidth: SettingsLayout.detailMinWidth,
-                minHeight: SettingsLayout.detailMinHeight
+            .listStyle(.sidebar)
+            .navigationSplitViewColumnWidth(
+                min: SettingsLayout.sidebarMinWidth,
+                ideal: SettingsLayout.sidebarIdealWidth,
+                max: SettingsLayout.sidebarMaxWidth
             )
+        } detail: {
+            Group {
+                switch selectedTab {
+                case .clipboard:
+                    ClipboardHistorySettingsView()
+                case .accessibility:
+                    SystemSettingsView()
+                }
+            }
+            .frame(minWidth: SettingsLayout.detailMinWidth, minHeight: SettingsLayout.detailMinHeight)
         }
-        .conditionalSearchable(text: $searchText, prompt: "Tìm nhanh cài đặt…")
-        .settingsSearchToolbarBehavior()
         .navigationSplitViewStyle(.balanced)
     }
-
-    @ViewBuilder
-    private var sidebarView: some View {
-        let list = List(selection: $selectedTab) {
-            if searchText.isEmpty {
-                // Normal tab list grouped by section
-                ForEach(SettingsTabSection.allCases.filter { !$0.tabs.isEmpty }) { section in
-                    Section(section.title) {
-                        ForEach(section.tabs) { tab in
-                            SettingsSidebarRow(tab: tab)
-                                .tag(tab)
-                        }
-                    }
-                }
-            } else {
-                // Search results with improved visual feedback
-                if filteredSettings.isEmpty {
-                    VStack(spacing: 12) {
-                        Image(systemName: "magnifyingglass")
-                            .font(.system(size: 36))
-                            .foregroundStyle(.tertiary)
-                        Text("Không có kết quả cho \"\(searchText)\"")
-                            .font(.headline)
-                            .foregroundStyle(.secondary)
-                        Text("Hãy thử từ khóa khác")
-                            .font(.subheadline)
-                            .foregroundStyle(.tertiary)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding()
-                } else {
-                    ForEach(filteredSettings) { item in
-                        SearchResultRow(item: item) {
-                            withAnimation(.phtvMorph) {
-                                selectedTab = item.tab
-                                searchText = ""
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        .listStyle(.sidebar)
-        .navigationSplitViewColumnWidth(
-            min: SettingsLayout.sidebarMinWidth,
-            ideal: SettingsLayout.sidebarIdealWidth,
-            max: SettingsLayout.sidebarMaxWidth
-        )
-        .animation(nil, value: selectedTab)
-
-        if #available(macOS 26.0, *) {
-            list
-        } else {
-            list
-                .scrollContentBackground(.hidden)
-                .background(sidebarBackground)
-        }
-    }
-
-    @ViewBuilder
-    private var detailView: some View {
-        // Lazy loading: Only create the view for selected tab.
-        Group {
-            if selectedTab == .clipboardHistory {
-                ClipboardHistorySettingsView()
-            } else if selectedTab == .system {
-                SystemSettingsView()
-            } else {
-                ClipboardHistorySettingsView()
-            }
-        }
-        // Avoid forced teardown to reduce peak allocations on tab switch.
-        .transaction { transaction in
-            transaction.animation = nil
-        }
-    }
-
-    @ViewBuilder
-    private var settingsDetailExtensionBackground: some View {
-        if #available(macOS 26.0, *) {
-            Color(NSColor.windowBackgroundColor)
-                .backgroundExtensionEffect()
-                .ignoresSafeArea()
-        }
-    }
-
-    @ViewBuilder
-    private var sidebarBackground: some View {
-        ZStack {
-            LinearGradient(
-                colors: [
-                    Color(NSColor.windowBackgroundColor).opacity(0.98),
-                    Color(NSColor.controlBackgroundColor).opacity(0.96)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-
-            Rectangle()
-                .fill(.thinMaterial)
-                .opacity(0.55)
-        }
-        .ignoresSafeArea()
-    }
 }
 
-// MARK: - Sidebar Row
-struct SettingsSidebarRow: View {
-    let tab: SettingsTab
-
-    var body: some View {
-        Label {
-            Text(tab.title)
-                .font(.body)
-        } icon: {
-            Image(systemName: tab.iconName)
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(.secondary)
-        }
-        .contentShape(Rectangle())
-    }
-}
-
-// MARK: - Search Result Row
-
-struct SearchResultRow: View {
-    let item: SettingsItem
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 10) {
-                Image(systemName: item.iconName)
-                    .font(.system(size: 15, weight: .medium))
-                    .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(.secondary)
-                    .frame(width: 20)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(item.title)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.primary)
-                    Text(item.tab.title)
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.tertiary)
-            }
-            .padding(.vertical, 6)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
+private enum SettingsTab: Hashable {
+    case clipboard
+    case accessibility
 }
 
 #Preview {

@@ -123,7 +123,7 @@ final class ClipboardMonitor {
     }
 
     private func captureCurrentPasteboard(_ pasteboard: NSPasteboard) -> ClipboardHistoryItem? {
-        let sourceApp = PHTVAppContextService.currentFrontmostBundleId()
+        let sourceApp = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
         guard ClipboardHistoryPrivacyPolicy.shouldCaptureContent(from: sourceApp) else {
             return nil
         }

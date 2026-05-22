@@ -1,13 +1,6 @@
 //
 //  StatusBarMenuManager.swift
-//  PHTV
-//
-//  Created by Phạm Hùng Tiến on 2026.
-//  Copyright © 2026 Phạm Hùng Tiến. All rights reserved.
-//
-//  Replaces SwiftUI MenuBarExtra to fix submenu hover behavior.
-//  SwiftUI's Menu{} inside MenuBarExtra(.menu) does not expand on hover;
-//  NSStatusItem + NSMenu gives native submenu behavior.
+//  Pastebay
 //
 
 import AppKit
@@ -18,461 +11,113 @@ final class StatusBarMenuManager: NSObject, NSMenuDelegate {
     static let shared = StatusBarMenuManager()
 
     private var statusItem: NSStatusItem?
-    private let iconCache = NSCache<NSString, NSImage>()
-    private var notificationTasks: [Task<Void, Never>] = []
-    private var didSetupIconObservers = false
-
     private var appState: AppState { AppState.shared }
 
-    private override init() {
-        super.init()
-        iconCache.countLimit = 32
-    }
-
     func setup() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        updateIcon()
+        guard statusItem == nil else { return }
+
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        item.button?.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "Pastebay")
+        item.button?.image?.isTemplate = true
 
         let menu = NSMenu()
         menu.delegate = self
-        statusItem?.menu = menu
-
-        setupIconObserversIfNeeded()
+        item.menu = menu
+        statusItem = item
     }
-
-    private func setupIconObserversIfNeeded() {
-        guard !didSetupIconObservers else { return }
-        didSetupIconObservers = true
-
-        let names: [NSNotification.Name] = [
-            NotificationName.languageChangedFromSwiftUI,
-            NotificationName.languageChangedFromBackend,
-            NotificationName.languageChangedFromExcludedApp,
-            NotificationName.languageChangedFromSmartSwitch,
-            NotificationName.languageChangedFromObjC,
-            NotificationName.menuBarIconPreferenceChanged,
-            NotificationName.menuBarIconSizeChanged
-        ]
-
-        notificationTasks.forEach { $0.cancel() }
-        notificationTasks = names.map { name in
-            Task { @MainActor [weak self] in
-                for await _ in NotificationCenter.default.notifications(named: name) {
-                    guard let self, !Task.isCancelled else { break }
-                    self.updateIcon()
-                }
-            }
-        }
-    }
-
-    // MARK: - Icon
-
-    private func updateIcon() {
-        guard let button = statusItem?.button else { return }
-        let name = resolvedIconName()
-        let size = resolvedIconSize()
-        button.image = renderedIcon(named: name, size: size)
-    }
-
-    private func resolvedIconName() -> String {
-        return "menubar_icon"
-    }
-
-    private func resolvedIconSize() -> CGFloat {
-        let minSize: CGFloat = 12
-        let maxSize = max(minSize, NSStatusBar.system.thickness - 4)
-        let requested = CGFloat(appState.menuBarIconSize)
-        return min(max(requested, minSize), maxSize)
-    }
-
-    private func renderedIcon(named name: String, size: CGFloat) -> NSImage? {
-        let key = "\(name)-\(Int((size * 10).rounded()))" as NSString
-        if let cached = iconCache.object(forKey: key) { return cached }
-        guard let base = NSImage(named: name)?.copy() as? NSImage else { return nil }
-        base.isTemplate = true
-        let target = NSSize(width: size, height: size)
-        let result = NSImage(size: target)
-        result.lockFocus()
-        base.draw(in: NSRect(origin: .zero, size: target),
-                  from: .zero, operation: .sourceOver, fraction: 1,
-                  respectFlipped: true, hints: [.interpolation: NSImageInterpolation.high])
-        result.unlockFocus()
-        result.isTemplate = true
-        iconCache.setObject(result, forKey: key)
-        return result
-    }
-
-    // MARK: - NSMenuDelegate
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
-        populate(menu)
-    }
 
-    // MARK: - Menu Structure
-
-    private func populate(_ menu: NSMenu) {
-        sectionHeader("Clipboard History", in: menu)
-        menu.addItem(closureToggle("Bật lịch sử Clipboard", image: "doc.on.clipboard.fill", on: appState.enableClipboardHistory) {
+        menu.addItem(toggleItem(
+            title: "Bật lịch sử Clipboard",
+            systemImage: "doc.on.clipboard.fill",
+            isOn: appState.enableClipboardHistory
+        ) {
             AppState.shared.enableClipboardHistory.toggle()
         })
-        menu.addItem(actionItem("Mở Clipboard History", image: "doc.on.clipboard", sel: #selector(openClipboardHistory)))
+
+        menu.addItem(actionItem(
+            title: "Mở Clipboard History",
+            systemImage: "doc.on.clipboard",
+            selector: #selector(openClipboardHistory)
+        ))
 
         menu.addItem(.separator())
 
-        let accessibilityTitle = AXIsProcessTrusted() ? "Đã cấp quyền Trợ năng" : "Cấp quyền Trợ năng"
-        let accessibilityIcon = AXIsProcessTrusted() ? "checkmark.shield" : "exclamationmark.shield"
-        menu.addItem(actionItem(accessibilityTitle, image: accessibilityIcon, sel: #selector(openAccessibilityPrefs)))
+        let hasAX = AXIsProcessTrusted()
+        menu.addItem(actionItem(
+            title: hasAX ? "Đã cấp quyền Trợ năng" : "Cấp quyền Trợ năng",
+            systemImage: hasAX ? "checkmark.shield" : "exclamationmark.shield",
+            selector: #selector(openAccessibilityPreferences)
+        ))
 
         menu.addItem(.separator())
 
         let settingsItem = NSMenuItem(title: "Mở Cài đặt...", action: #selector(openSettings), keyEquivalent: ",")
         settingsItem.keyEquivalentModifierMask = .command
+        settingsItem.image = image("slider.horizontal.3")
         settingsItem.target = self
-        settingsItem.image = sfImage("slider.horizontal.3")
         menu.addItem(settingsItem)
 
         menu.addItem(.separator())
 
-        let quitItem = NSMenuItem(title: "Thoát PHTV", action: #selector(quitApp), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: "Thoát Pastebay", action: #selector(quitApp), keyEquivalent: "q")
         quitItem.keyEquivalentModifierMask = .command
+        quitItem.image = image("power")
         quitItem.target = self
-        quitItem.image = sfImage("power")
         menu.addItem(quitItem)
     }
 
-    private func addLanguagePicker(to menu: NSMenu) {
-        let hotkey = HotkeyFormatter.switchHotkeyString(
-            control: appState.switchKeyControl,
-            option: appState.switchKeyOption,
-            shift: appState.switchKeyShift,
-            command: appState.switchKeyCommand,
-            fn: appState.switchKeyFn,
-            keyCode: appState.switchKeyCode,
-            keyName: appState.switchKeyName
-        )
-        let header = NSMenuItem(title: "Chế độ gõ (\(hotkey))", action: nil, keyEquivalent: "")
-        header.isEnabled = false
-        menu.addItem(header)
-
-        menu.addItem(radioItem("Tiếng Việt", image: "v.circle", on: appState.isEnabled, sel: #selector(setVietnamese)))
-        menu.addItem(radioItem("Tiếng Anh", image: "e.circle", on: !appState.isEnabled, sel: #selector(setEnglish)))
-    }
-
-    // MARK: - Submenu Builders
-
-    private func buildBoGoMenu() -> NSMenu {
-        let m = NSMenu()
-
-        sectionHeader("Phương pháp gõ", in: m)
-        for method in InputMethod.allCases {
-            m.addItem(closureRadio(method.displayName, on: appState.inputMethod == method) {
-                AppState.shared.inputMethod = method
-            })
-        }
-
-        m.addItem(.separator())
-
-        sectionHeader("Bảng mã", in: m)
-        for table in CodeTable.allCases {
-            m.addItem(closureRadio(table.displayName, on: appState.codeTable == table) {
-                AppState.shared.codeTable = table
-            })
-        }
-
-        m.addItem(.separator())
-
-        sectionHeader("Tùy chọn nhập", in: m)
-        m.addItem(closureToggle("Gõ nhanh (Quick Telex)", image: "hare", on: appState.quickTelex) {
-            AppState.shared.quickTelex.toggle()
-        })
-        m.addItem(closureToggle("Viết hoa đầu câu", image: "textformat.size.larger", on: appState.upperCaseFirstChar) {
-            AppState.shared.upperCaseFirstChar.toggle()
-        })
-        m.addItem(closureToggle("Phụ âm Z, F, W, J", image: "character.cursor.ibeam", on: appState.allowConsonantZFWJ) {
-            AppState.shared.allowConsonantZFWJ.toggle()
-        })
-        m.addItem(closureToggle("Phụ âm đầu nhanh", image: "arrow.right.to.line", on: appState.quickStartConsonant) {
-            AppState.shared.quickStartConsonant.toggle()
-        })
-        m.addItem(closureToggle("Phụ âm cuối nhanh", image: "arrow.left.to.line", on: appState.quickEndConsonant) {
-            AppState.shared.quickEndConsonant.toggle()
-        })
-
-        m.addItem(.separator())
-
-        sectionHeader("Chính tả", in: m)
-        m.addItem(closureToggle("Kiểm tra chính tả", image: "textformat.abc.dottedunderline", on: appState.checkSpelling) {
-            AppState.shared.checkSpelling.toggle()
-        })
-        m.addItem(closureToggle("Chính tả mới (oà, uý)", image: "textformat.abc", on: appState.useModernOrthography) {
-            AppState.shared.useModernOrthography.toggle()
-        })
-
-        return m
-    }
-
-    private func buildTinhNangMenu() -> NSMenu {
-        let m = NSMenu()
-
-        sectionHeader("Khôi phục", in: m)
-        m.addItem(closureToggle("Tự động khôi phục tiếng Anh", image: "character.bubble", on: appState.autoRestoreEnglishWord) {
-            AppState.shared.autoRestoreEnglishWord.toggle()
-        })
-
-        m.addItem(.separator())
-
-        sectionHeader("Gõ tắt & Macro", in: m)
-        m.addItem(closureToggle("Bật gõ tắt", image: "text.badge.plus", on: appState.useMacro) {
-            AppState.shared.useMacro.toggle()
-        })
-        m.addItem(closureToggle("Gõ tắt khi ở chế độ Anh", image: "character.book.closed", on: appState.useMacroInEnglishMode) {
-            AppState.shared.useMacroInEnglishMode.toggle()
-        })
-        m.addItem(closureToggle("Tự động viết hoa macro", image: "textformat.size", on: appState.autoCapsMacro) {
-            AppState.shared.autoCapsMacro.toggle()
-        })
-
-        m.addItem(.separator())
-
-        sectionHeader("Clipboard", in: m)
-        m.addItem(closureToggle("Lịch sử Clipboard", image: "doc.on.clipboard.fill", on: appState.enableClipboardHistory) {
-            AppState.shared.enableClipboardHistory.toggle()
-        })
-
-        m.addItem(.separator())
-
-        sectionHeader("Chuyển đổi thông minh", in: m)
-        m.addItem(closureToggle("Chuyển thông minh theo ứng dụng", image: "brain", on: appState.useSmartSwitchKey) {
-            AppState.shared.useSmartSwitchKey.toggle()
-        })
-        m.addItem(closureToggle("Nhớ bảng mã theo ứng dụng", image: "memories", on: appState.rememberCode) {
-            AppState.shared.rememberCode.toggle()
-        })
-
-        m.addItem(.separator())
-
-        sectionHeader("Tạm dừng & phục hồi", in: m)
-        m.addItem(closureToggle("Khôi phục khi nhấn \(appState.restoreKey.symbol)", image: "escape", on: appState.restoreOnEscape) {
-            AppState.shared.restoreOnEscape.toggle()
-        })
-        m.addItem(closureToggle("Tạm dừng khi giữ \(appState.pauseKeyName)", image: "pause.circle", on: appState.pauseKeyEnabled) {
-            AppState.shared.pauseKeyEnabled.toggle()
-        })
-
-        return m
-    }
-
-    private func buildTuongThichMenu() -> NSMenu {
-        let m = NSMenu()
-        m.addItem(closureToggle("Gửi phím từng bước", image: "arrow.down.to.line.compact", on: appState.sendKeyStepByStep) {
-            AppState.shared.sendKeyStepByStep.toggle()
-        })
-        m.addItem(closureToggle("Tương thích layout", image: "keyboard.badge.ellipsis", on: appState.performLayoutCompat) {
-            AppState.shared.performLayoutCompat.toggle()
-        })
-        return m
-    }
-
-    private func buildHeThongMenu() -> NSMenu {
-        let m = NSMenu()
-        m.addItem(closureToggle("Khởi động cùng máy", image: "power.circle", on: appState.runOnStartup) {
-            AppState.shared.runOnStartup.toggle()
-        })
-        m.addItem(closureToggle("Hiện icon trên Dock", image: "dock.rectangle", on: appState.showIconOnDock) {
-            AppState.shared.showIconOnDock.toggle()
-        })
-        m.addItem(closureToggle("Âm thanh khi chuyển chế độ", image: "speaker.wave.2", on: appState.beepOnModeSwitch) {
-            AppState.shared.beepOnModeSwitch.toggle()
-        })
-
-        m.addItem(.separator())
-
-        switch appState.typingRuntimeHealth.phase {
-        case .ready:
-            let item = NSMenuItem(title: "Đã cấp quyền nhập liệu", action: nil, keyEquivalent: "")
-            item.image = sfImage("checkmark.shield")
-            item.isEnabled = false
-            m.addItem(item)
-        case .relaunchPending:
-            let item = NSMenuItem(title: "Đang tự khởi động lại để nhận quyền", action: nil, keyEquivalent: "")
-            item.image = sfImage("arrow.clockwise.circle")
-            item.isEnabled = false
-            m.addItem(item)
-        case .waitingForEventTap:
-            let item = NSMenuItem(title: "Đã cấp đủ quyền, đang khởi tạo", action: nil, keyEquivalent: "")
-            item.image = sfImage("clock.badge.exclamationmark")
-            item.isEnabled = false
-            m.addItem(item)
-        case .inputMonitoringRequired:
-            m.addItem(actionItem("Cần cấp Giám sát đầu vào", image: "eye", sel: #selector(openAccessibilityPrefs)))
-        case .accessibilityRequired:
-            m.addItem(actionItem("Cần cấp quyền Accessibility", image: "exclamationmark.shield", sel: #selector(openAccessibilityPrefs)))
-        }
-
-        return m
-    }
-
-    private func buildCongCuMenu() -> NSMenu {
-        let m = NSMenu()
-
-        sectionHeader("Chuyển nhanh Clipboard", in: m)
-        m.addItem(closureAction("TCVN3 → Unicode", image: "arrow.right") { self.quickConvert(from: 1, to: 0) })
-        m.addItem(closureAction("VNI → Unicode", image: "arrow.right") { self.quickConvert(from: 2, to: 0) })
-        m.addItem(closureAction("Unicode → TCVN3", image: "arrow.right") { self.quickConvert(from: 0, to: 1) })
-        m.addItem(closureAction("Tổ hợp → Unicode", image: "arrow.right") { self.quickConvert(from: 3, to: 0) })
-
-        m.addItem(.separator())
-        m.addItem(actionItem("Chuyển đổi bảng mã...", image: "arrow.triangle.2.circlepath", sel: #selector(openConvertTool)))
-        m.addItem(actionItem("Lau bàn phím...", image: "keyboard.badge.eye", sel: #selector(openKeyboardCleaning)))
-
-        if PHTVKeyboardCleaningService.isCleaningActive() {
-            m.addItem(actionItem("Dừng lau bàn phím", image: "stop.circle", sel: #selector(stopKeyboardCleaning)))
-        }
-
-        return m
-    }
-
-    // MARK: - Item Factories
-
-    private func submenu(_ title: String, image: String, build: () -> NSMenu) -> NSMenuItem {
-        let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
-        item.image = sfImage(image)
-        item.submenu = build()
-        return item
-    }
-
-    private func actionItem(_ title: String, image: String? = nil, sel: Selector) -> NSMenuItem {
-        let item = NSMenuItem(title: title, action: sel, keyEquivalent: "")
+    private func actionItem(title: String, systemImage: String, selector: Selector) -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: selector, keyEquivalent: "")
+        item.image = image(systemImage)
         item.target = self
-        if let image { item.image = sfImage(image) }
         return item
     }
 
-    private func radioItem(_ title: String, image: String? = nil, on: Bool, sel: Selector) -> NSMenuItem {
-        let item = NSMenuItem(title: title, action: sel, keyEquivalent: "")
-        item.target = self
-        item.state = on ? .on : .off
-        if let image { item.image = sfImage(image) }
+    private func toggleItem(title: String, systemImage: String, isOn: Bool, action: @escaping () -> Void) -> NSMenuItem {
+        let item = MenuCallbackItem(title: title, handler: action)
+        item.image = image(systemImage)
+        item.state = isOn ? .on : .off
         return item
     }
 
-    private func closureToggle(_ title: String, image: String? = nil, on: Bool, handler: @escaping () -> Void) -> NSMenuItem {
-        let item = MenuCallbackItem(title: title, handler: handler)
-        item.state = on ? .on : .off
-        if let image { item.image = sfImage(image) }
-        return item
+    private func image(_ systemName: String) -> NSImage? {
+        NSImage(systemSymbolName: systemName, accessibilityDescription: nil)
     }
 
-    private func closureRadio(_ title: String, image: String? = nil, on: Bool, handler: @escaping () -> Void) -> NSMenuItem {
-        let item = MenuCallbackItem(title: title, handler: handler)
-        item.state = on ? .on : .off
-        if let image { item.image = sfImage(image) }
-        return item
+    @objc private func openClipboardHistory() {
+        ClipboardHistoryManager.shared.toggleVisibility()
     }
 
-    private func closureAction(_ title: String, image: String? = nil, handler: @escaping () -> Void) -> NSMenuItem {
-        let item = MenuCallbackItem(title: title, handler: handler)
-        if let image { item.image = sfImage(image) }
-        return item
+    @objc private func openAccessibilityPreferences() {
+        PastebayAccessibilityService.openAccessibilityPreferences()
     }
-
-    private func sectionHeader(_ title: String, in menu: NSMenu) {
-        if #available(macOS 14, *) {
-            menu.addItem(.sectionHeader(title: title))
-        } else {
-            let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
-            item.isEnabled = false
-            menu.addItem(item)
-        }
-    }
-
-    private func sfImage(_ name: String) -> NSImage? {
-        NSImage(systemSymbolName: name, accessibilityDescription: nil)
-    }
-
-    // MARK: - Actions
-
-    @objc private func setVietnamese() { AppState.shared.isEnabled = true }
-    @objc private func setEnglish() { AppState.shared.isEnabled = false }
 
     @objc private func openSettings() {
         SettingsWindowOpener.requestOpenWindow()
     }
 
-    @objc private func openAbout() {
-        SettingsWindowOpener.requestOpenWindow()
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(300))
-            guard !Task.isCancelled else { return }
-            NotificationCenter.default.post(name: NotificationName.showAboutTab, object: nil)
-        }
-    }
-
-    @objc private func checkUpdates() {
-        NotificationCenter.default.post(name: NotificationName.sparkleManualCheck, object: nil)
-    }
-
     @objc private func quitApp() {
         NSApplication.shared.terminate(nil)
     }
-
-    @objc private func openAccessibilityPrefs() {
-        PHTVAccessibilityService.openAccessibilityPreferences()
-    }
-
-    @objc private func openClipboardHistory() {
-        ClipboardHotkeyBridge.openClipboardHistory()
-    }
-
-    @objc private func openConvertTool() {
-        SettingsWindowOpener.requestOpenWindow()
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(250))
-            guard !Task.isCancelled else { return }
-            NotificationCenter.default.post(name: NotificationName.showConvertToolSheet, object: nil)
-        }
-    }
-
-    @objc private func openKeyboardCleaning() {
-        SettingsWindowOpener.requestOpenWindow()
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(250))
-            guard !Task.isCancelled else { return }
-            NotificationCenter.default.post(name: NotificationName.showKeyboardCleaningTab, object: nil)
-        }
-    }
-
-    @objc private func stopKeyboardCleaning() {
-        PHTVKeyboardCleaningService.stopCleaning()
-    }
-
-    private func quickConvert(from source: Int, to target: Int) {
-        if PHTVConvertToolTextConversionService.quickConvertClipboard(
-            fromCode: Int32(source),
-            toCode: Int32(target)
-        ) {
-            NSSound.beep()
-        }
-    }
 }
 
-// MARK: - MenuCallbackItem
-
-/// NSMenuItem subclass that stores and invokes a closure when selected.
-/// NSMenuItem does NOT retain its target, so target = self is safe here.
 private final class MenuCallbackItem: NSMenuItem {
     private let handler: () -> Void
 
     init(title: String, handler: @escaping () -> Void) {
         self.handler = handler
-        super.init(title: title, action: #selector(invoke), keyEquivalent: "")
-        self.target = self
+        super.init(title: title, action: #selector(runHandler), keyEquivalent: "")
+        target = self
     }
 
-    required init(coder: NSCoder) { fatalError("not used") }
+    required init(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
-    @objc private func invoke() {
+    @objc private func runHandler() {
         handler()
     }
 }
