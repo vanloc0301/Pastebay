@@ -1,0 +1,78 @@
+# Pastebay release artifact workflow
+
+name: Release
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build-release:
+    name: Build Release Artifact
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Build Release
+        working-directory: App
+        run: |
+          set -euo pipefail
+          xcodebuild build \
+            -project PHTV.xcodeproj \
+            -scheme PHTV \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            -derivedDataPath "$RUNNER_TEMP/pastebay-derived-data" \
+            -skipPackagePluginValidation \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            DEVELOPMENT_TEAM="" \
+            | tee "$RUNNER_TEMP/pastebay-release-build.log"
+
+      - name: Package Pastebay.app
+        run: |
+          set -euo pipefail
+          APP_PATH="$RUNNER_TEMP/pastebay-derived-data/Build/Products/Release/Pastebay.app"
+          OUT_DIR="$RUNNER_TEMP/pastebay-release"
+          SHORT_SHA="${GITHUB_SHA:0:7}"
+          ZIP_PATH="$OUT_DIR/Pastebay-macOS-$SHORT_SHA.zip"
+
+          test -d "$APP_PATH"
+          mkdir -p "$OUT_DIR"
+          ditto -c -k --keepParent "$APP_PATH" "$ZIP_PATH"
+          shasum -a 256 "$ZIP_PATH" > "$OUT_DIR/Pastebay-macOS-$SHORT_SHA.zip.sha256"
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: Pastebay-macOS
+          path: |
+            ${{ runner.temp }}/pastebay-release/Pastebay-macOS-*.zip
+            ${{ runner.temp }}/pastebay-release/Pastebay-macOS-*.zip.sha256
+          retention-days: 30
+
+      - name: Upload build log
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-build-log
+          path: ${{ runner.temp }}/pastebay-release-build.log
+          retention-days: 7
